@@ -1,89 +1,91 @@
 @startuml
 skinparam classAttributeIconSize 0
 
-class Зарождение {
-    - игровая сессия
-    - правила игры
-    - история
-    + main
-    + run : транслирует команды и проверяет выход
+' --- Основные классы (C) ---
+
+class AppLauncher {
+    - currentSession: GameSession
+    + main(args: Array<String>)
+    + run()
 }
 
-class ИгроваяСессия {
-    - id
-    + статус сессии
-    + список игроков
-    + текущий игрок
-    --
-    + передать ход
-    + применить действие
+class GameSession {
+    - id: UUID
+    - status: SessionStatus
+    - players: List<Player>
+    - shotgun: Shotgun
+    - currentPlayerIdx: Int
+    
+    + nextTurn()
+    + handleShot(target: Player)
 }
 
-class ПравилаИгры {
-    + правильный шаг?
-    + проверить инварианты
-    + конец?
+class Shotgun {
+    - barrel: MutableList<AmmoType>
+    + load(live: Int, blank: Int)
+    + fire(): AmmoType
+    + peek(): AmmoType
+    + isEmpty(): Boolean
 }
 
-class ИсторияМатча {
-    - id
-    + победитель
-    + проигравшие
+class Player {
+    - id: UUID
+    + name: String
+    - health: Int
+    - isCuffed: Boolean
+    - isBuffed: Boolean
+    - inventory: List<Item>
+    
+    + takeDamage(value: Int)
+    + heal(value: Int)
+    + useItem(item: Item, session: GameSession)
 }
 
-enum СтатусСессии {
-    зарядка
-    раздача предметов
-    ход
-    конецИгры
+class Statistics {
+    + wins: Int
+    + totalGames: Int
+    + calculateWinRate(): Double
 }
 
-class Игрок {
-    - id
-    + имя
-    + здоровье
-    + статус
+class MatchHistory {
+    - matchId: UUID
+    + winnerId: UUID
+    + losersId: List<UUID>
+    + save()
 }
 
-class Дробовик {
-    - магазин
-    + зарядить
-    --
-    + выстрелить
+' --- Перечисления (E) ---
+
+enum AmmoType {
+    LIVE
+    BLANK
 }
 
-enum ТипПатрона {
-    боевой
-    холостой
+enum SessionStatus {
+    LOADING
+    DEALING
+    PLAYER_TURN
+    GAME_OVER
 }
 
-class Инвентарь {
-    + размер
-    --
-    + добавить предмет
+' --- Интерфейсы и Абстракции (I) ---
+
+interface Item {
+    + name: String
+    + applyEffect(session: GameSession, user: Player)
 }
 
-class Статистика {
-    + победы
-    + винрейт
-}
+' --- Отношения и зависимости ---
 
-class Предмет {
-    + название
-    + эффект
-}
+AppLauncher "1" *-- "0..1" GameSession : manages
+GameSession "1" *-- "2..4" Player : players
+GameSession "1" *-- "1" Shotgun : shotgun
+GameSession "1" *-- "1" SessionStatus : status
 
-Зарождение *-- ИгроваяСессия : создает в начале
-Зарождение *-- ПравилаИгры : проверяет
-Зарождение ..> ИсторияМатча : создает при выходе
+Player "1" *-- "1" Statistics : profile
+Player "1" o-- "0..8" Item : inventory
 
-ИгроваяСессия *-- СтатусСессии : имеет
-ИгроваяСессия *-- Игрок
-ИгроваяСессия *-- Дробовик : содержит
-
-Игрок *-- Инвентарь : хранит
-Игрок -- Статистика : имеет
-Инвентарь o-- Предмет : содержит
-Дробовик ..> ТипПатрона : имеет
+Shotgun ..> AmmoType : contains
+AppLauncher ..> MatchHistory : logs
 
 @enduml
