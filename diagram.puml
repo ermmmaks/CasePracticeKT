@@ -17,7 +17,7 @@ class GameSession {
     - currentPlayerIdx: Int
     
     + nextTurn()
-    + handleShot(target: Player)
+    + shot(target: Player)
 }
 
 class Shotgun {
@@ -77,15 +77,15 @@ interface Item {
 
 ' --- Отношения и зависимости ---
 
-AppLauncher "1" *-- "0..1" GameSession : manages
-GameSession "1" *-- "2..4" Player : players
-GameSession "1" *-- "1" Shotgun : shotgun
-GameSession "1" *-- "1" SessionStatus : status
+AppLauncher "1" *-- "0..1" GameSession
+GameSession "1" *-- "2..4" Player
+GameSession "1" *-- "1" Shotgun
+GameSession "1" *-- "1" SessionStatus
 
-Player "1" *-- "1" Statistics : profile
-Player "1" o-- "0..8" Item : inventory
+Player "1" *-- "1" Statistics
+Player "1" o-- "0..8" Item
 
-Shotgun ..> AmmoType : contains
-AppLauncher ..> MatchHistory : logs
+Shotgun ..> AmmoType
+AppLauncher ..> MatchHistory
 
 @enduml
