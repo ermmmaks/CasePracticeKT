@@ -31,3 +31,4 @@ gradlew.bat
 .gradle/
 gradle/
 gradle.properties
+build/
