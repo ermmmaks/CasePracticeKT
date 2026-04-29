@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="GameLogicTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-04-29T22:25:10.585Z" hostname="maks-l17" time="0.031">
+  <properties/>
+  <testcase name="testGameOverCondition()" classname="GameLogicTest" time="0.017"/>
+  <testcase name="testShotSelfWithBlank()" classname="GameLogicTest" time="0.001"/>
+  <testcase name="testShotgunLoading()" classname="GameLogicTest" time="0.001"/>
+  <testcase name="testHandcuff()" classname="GameLogicTest" time="0.001"/>
+  <testcase name="testHealth()" classname="GameLogicTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
