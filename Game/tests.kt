@@ -45,6 +45,8 @@ class GameLogicTest
         assertTrue(players[1].isCuffed)
 
         session.shot(players[2])
+
+        assertFalse(players[1].isCuffed)
     }
 
     @Test
@@ -65,8 +67,26 @@ class GameLogicTest
         session.startRound(live = 1, blank = 0)
 
         players[1].takeDamage(4)
+        players[2].takeDamage(4)
+        players[3].takeDamage(4)
 
         session.shot(players[1])
+
+        assertEquals(SessionStatus.GAME_OVER, session.status)
+    }
+
+    @Test
+    fun testE2E()
+    {
+        val duel = listOf(
+            Player(name = "читер-про", initialHealth = 4),
+            Player(name = "нубик-майн", initialHealth = 1)
+        )
+
+        val session = GameSession(duel)
+        session.startRound(live = 1, blank = 0)
+
+        session.shot(duel[1])
 
         assertEquals(SessionStatus.GAME_OVER, session.status)
     }

@@ -72,6 +72,8 @@ class GameSession
 
         target.takeDamage(damageResult)
 
+        checkGameCondition()
+
         onEvent?.invoke(
             GameEvent.ShotFired(
                 type = ammo,
@@ -81,8 +83,6 @@ class GameSession
         )
 
         damageMultiplier = 1
-
-        checkGameCondition()
 
         if (status != SessionStatus.GAME_OVER) {
             val shotSelfWithBlank = (target == players[currentPlayerIdx])
@@ -128,7 +128,7 @@ class GameSession
 
         if (shotgun.isEmpty()) {
             onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
-            startRound()
+            startRound(live = (1..4).random(), blank = (1..4).random())
         }
     }
 
@@ -193,7 +193,7 @@ class GameSession
 
     fun useItem(player: Player, item: Item, target: Player? = null) {
         if (player != players[currentPlayerIdx]) {
-            sendinfo("Cheater?! FU")
+            sendInfo("Cheater?! FU")
         }
 
         if (player.inventory.remove(item)) {
