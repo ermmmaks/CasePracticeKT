@@ -27,17 +27,31 @@ class GameSession
         private set
 
     fun startRound(live: Int, blank: Int) {
+        val live = (1..4).random()
+        val blank = (1..4).random()
+        shotgun.load(live, blank)
+
+        val allPossibleItems = listOf(
+            GameItems.Handsaw, GameItems.Magnifier, GameItems.Beer,
+            GameItems.Phone, GameItems.Inverter, GameItems.Handcuffs, 
+            GameItems.Cigarette, GameItems.Handsaw, 
+        )
+
         for (player in players) {
             player.isCuffed = false
             player.isBuffed = false
+
+            repeat(8) {
+                val randomItem = allPossibleItems.random()
+                player.addItem(randomItem)
+            }
         }
 
-        shotgun.load(live, blank)
         status = SessionStatus.PLAYER_TURN
 
         val firstPlayer = players[currentPlayerIdx]
+        onEvent?.invoke(GameEvent.ActionLog("${live} LIVE, ${blank} BLANK. SOMEONE WILL BE HURT"))
         onEvent?.invoke(GameEvent.TurnChanged(firstPlayer.name))
-        onEvent?.invoke(GameEvent.ActionLog("New round: ${live} live, ${blank} blank"))
     }
 
     // SSHHOOTT
@@ -104,11 +118,17 @@ class GameSession
     // CCOONNDDIITTIIOONN
     private fun checkGameCondition()
     {
-        val losers = players.find { it.health <= 0 }
+        val activePlayers = players.filter { it.health > 0 }
 
-        if (losers != null) {
+        if (activePlayers.size <= 1) {
             status = SessionStatus.GAME_OVER
             onEvent?.invoke(GameEvent.GameOver)
+            return
+        }
+
+        if (shotgun.isEmpty()) {
+            onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
+            startRound()
         }
     }
 
@@ -172,6 +192,10 @@ class GameSession
     }
 
     fun useItem(player: Player, item: Item, target: Player? = null) {
+        if (player != players[currentPlayerIdx]) {
+            sendinfo("Cheater?! FU")
+        }
+
         if (player.inventory.remove(item)) {
             item.applyEffect(this, player, target)
             onEvent?.invoke(GameEvent.ItemUsed(player.name, item.name))
