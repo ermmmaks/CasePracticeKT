@@ -26,6 +26,7 @@ class GameSession
     var status: SessionStatus = SessionStatus.LOADING
         private set
 
+    //SSTTARRTT RROOUUNNDD
     fun startRound(live: Int, blank: Int) {
         val live = (1..4).random()
         val blank = (1..4).random()
@@ -34,14 +35,18 @@ class GameSession
         val allPossibleItems = listOf(
             GameItems.Handsaw, GameItems.Magnifier, GameItems.Beer,
             GameItems.Phone, GameItems.Inverter, GameItems.Handcuffs, 
-            GameItems.Cigarette, GameItems.Handsaw, 
+            GameItems.Cigarette,
         )
 
         for (player in players) {
+            if (player.health <= 0) {
+                continue
+            }
+
             player.isCuffed = false
             player.isBuffed = false
 
-            repeat(8) {
+            repeat(8 - player.inventory.size) {
                 val randomItem = allPossibleItems.random()
                 player.addItem(randomItem)
             }
