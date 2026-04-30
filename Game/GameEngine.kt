@@ -90,6 +90,7 @@ class GameSession
             
             if (shotSelfWithBlank && isBlank) {
                 onEvent?.invoke(GameEvent.ActionLog("${target.name} is lucky bastard"))
+                onEvent?.invoke(GameEvent.TurnChanged(activePlayer.name))
             } else {
                 nextTurn()
             }
@@ -101,13 +102,23 @@ class GameSession
     {
         var nextIdx = (currentPlayerIdx + 1) % players.size
         
+        while (players[nextIdx].health <= 0) {
+            nextIdx = (nextIdx + 1) % player.size
+
+            if (nextIdx == currentPlayerIdx) {
+                break
+            }
+        }
+
         if (players[nextIdx].isCuffed) {
             val skippedPlayer = players[nextIdx]
             skippedPlayer.isCuffed = false
 
             onEvent?.invoke(GameEvent.ActionLog("${skippedPlayer.name} skipped turn"))
 
-            nextIdx = (nextIdx + 1) % players.size
+            currentPlayerIdx = nextIdx
+            nextTurn()
+            return
         }
 
         currentPlayerIdx = nextIdx
