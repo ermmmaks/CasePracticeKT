@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="Gradle: org.jetbrains.compose.material:material-icons-core-desktop:1.6.11" type="java-imported" external-system-id="GRADLE">
+    <properties groupId="org.jetbrains.compose.material" artifactId="material-icons-core-desktop" version="1.6.11" baseVersion="1.6.11" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.jetbrains.compose.material/material-icons-core-desktop/1.6.11/47e99680d4e5f234dc4514fd12fec4daf1af4597/material-icons-core-desktop-1.6.11.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$PROJECT_DIR$/../.gradle/caches/modules-2/files-2.1/org.jetbrains.compose.material/material-icons-core-desktop/1.6.11/e518df0d8a19c3833f72a24ff667853015e340fd/material-icons-core-desktop-1.6.11-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

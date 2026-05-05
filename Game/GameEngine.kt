@@ -28,6 +28,8 @@ class GameSession
 
     //SSTTARRTT RROOUUNNDD
     fun startRound(live: Int, blank: Int) {
+        status = SessionStatus.DISTRIBUTION
+
         shotgun.load(live, blank)
 
         val allPossibleItems = listOf(
