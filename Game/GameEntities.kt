@@ -20,7 +20,7 @@ object GameItems {
     }
 
     val Magnifier = object : Item {
-        override val name = "Magnifer"
+        override val name = "Magnifier"
         override fun applyEffect(context: GameContext, user: Player, target: Player?) {
             val ammo = context.peekNextAmmo()
             context.sendInfo("Current ammo is: $ammo")
@@ -142,19 +142,14 @@ class Player
 
     val inventory = mutableListOf<Item>()
 
-    fun takeDamage(DMG: Int)
+    fun takeDamage(dmg: Int)
     {
-        health = (health - DMG).coerceAtLeast(0)
+        health = (health - dmg).coerceAtLeast(0)
     }
 
-    fun heal()
-    {
+    fun heal() {
         val nextHealth = health + 1
-        if (nextHealth > 4) {
-        health = 4
-        } else {
-            health = nextHealth
-        }
+        health = if (nextHealth > 4) 4 else nextHealth
     }
 
     fun addItem(item: Item): Boolean

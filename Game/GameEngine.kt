@@ -28,8 +28,8 @@ class GameSession
 
     //SSTTARRTT RROOUUNNDD
     fun startRound(live: Int, blank: Int) {
-        val live = (1..4).random()
-        val blank = (1..4).random()
+        status = SessionStatus.DISTRIBUTION
+
         shotgun.load(live, blank)
 
         val allPossibleItems = listOf(
@@ -55,7 +55,7 @@ class GameSession
         status = SessionStatus.PLAYER_TURN
 
         val firstPlayer = players[currentPlayerIdx]
-        onEvent?.invoke(GameEvent.ActionLog("${live} LIVE, ${blank} BLANK. SOMEONE WILL BE HURT"))
+        onEvent?.invoke(GameEvent.ActionLog("$live LIVE, $blank BLANK. SOMEONE WILL BE HURT"))
         onEvent?.invoke(GameEvent.TurnChanged(firstPlayer.name))
     }
 
@@ -67,12 +67,10 @@ class GameSession
         }
 
         val ammo = shotgun.fire()
-        var damageResult = 0
-
-        if (ammo == AmmoType.LIVE) {
-            damageResult = 1 * damageMultiplier
+        val damageResult = if (ammo == AmmoType.LIVE) {
+            1 * damageMultiplier
         } else {
-            damageResult = 0
+            0
         }
 
         target.takeDamage(damageResult)
@@ -95,7 +93,7 @@ class GameSession
             
             if (shotSelfWithBlank && isBlank) {
                 onEvent?.invoke(GameEvent.ActionLog("${target.name} is lucky bastard"))
-                onEvent?.invoke(GameEvent.TurnChanged(activePlayer.name))
+                onEvent?.invoke(GameEvent.TurnChanged(players[currentPlayerIdx].name))
             } else {
                 nextTurn()
             }
@@ -108,7 +106,7 @@ class GameSession
         var nextIdx = (currentPlayerIdx + 1) % players.size
         
         while (players[nextIdx].health <= 0) {
-            nextIdx = (nextIdx + 1) % player.size
+            nextIdx = (nextIdx + 1) % players.size
 
             if (nextIdx == currentPlayerIdx) {
                 break
@@ -157,7 +155,7 @@ class GameSession
     override fun ejectAmmo(): AmmoType
     {
         val ammo = shotgun.fire()
-        onEvent?.invoke(GameEvent.ActionLog("${ammo} was ejected"))
+        onEvent?.invoke(GameEvent.ActionLog("$ammo was ejected"))
         return ammo
     }
 
@@ -192,7 +190,7 @@ class GameSession
             sendInfo("No live left")
         } else {
             val position = idx + 1
-            sendInfo("${position} is live")
+            sendInfo("$position is live")
         }
     }
 

@@ -9,7 +9,7 @@ enum class AmmoType
 enum class SessionStatus
 {
     LOADING,
-    DEALING,
+    DISTRIBUTION,
     PLAYER_TURN,
     GAME_OVER
 }

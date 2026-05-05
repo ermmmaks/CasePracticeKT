@@ -1,41 +1,39 @@
 plugins {
     kotlin("jvm") version "2.0.0"
-    application
+    id("org.jetbrains.compose") version "1.6.11"
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0" // Это критически важно!
 }
 
 group = "org.example"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
+    google()
     mavenCentral()
-}
-
-dependencies {
-    implementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    implementation(kotlin("test"))
 }
 
 sourceSets {
     main {
-        kotlin.setSrcDirs(listOf("Game"))
+        kotlin {
+            srcDirs(listOf("Game"))
+        }
     }
-    test {
-        kotlin.setSrcDirs(listOf("Game"))
+}
+
+dependencies {
+    implementation(compose.desktop.currentOs)
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
+
+    implementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    implementation(kotlin("test"))
+}
+
+
+compose.desktop {
+    application {
+        mainClass = "AppLauncherKt"
+        nativeDistributions {
+            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
+        }
     }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-application {
-    mainClass.set("Game.AppLauncherKt") 
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(17)
 }
