@@ -1,5 +1,5 @@
 import androidx.compose.runtime.*
-import kotlinx.coroutines.flow.*
+import java.util.UUID
 
 data class PlayerUiState
 (
@@ -7,6 +7,7 @@ data class PlayerUiState
     val name: String,
     val health: Int,
     val isCuffed: Boolean,
+    val isBuffed: Boolean,
     val inventory: List<Item>,
     val isAlive: Boolean
 )
@@ -15,13 +16,17 @@ data class UiState
 (
     val players: List<PlayerUiState> = emptyList(),
     val activePlayerIdx: Int = 0,
+    val targetPlayerIdx: Int? = null,
     val logs: List<String> = emptyList(),
     val isShotgunSawedOff: Boolean = false,
     val infoMessage: String = ""
 )
 
-class ViewModel(private val session: GameSession, private val playersFromSession: List<Player>)
-{
+class ViewModel
+(
+    private val session: GameSession,
+    private val playersFromSession: List<Player>
+) {
     var uiState by mutableStateOf(UiState(
         players = playersFromSession.map { it.toUiState() }
     ))
@@ -35,7 +40,7 @@ class ViewModel(private val session: GameSession, private val playersFromSession
     {
         when (event) {
             is GameEvent.TurnChanged -> {
-                val newIdx = uiState.players.indexOfFirst { it.name == event.newActivePlayeerName }
+                val newIdx = uiState.players.indexOfFirst { it.name == event.newActivePlayerName }
                 uiState = uiState.copy(activePlayerIdx = newIdx, isShotgunSawedOff = false)
                 refreshPlayers()
             }
@@ -65,14 +70,41 @@ class ViewModel(private val session: GameSession, private val playersFromSession
         )
     }
 
-    private fun Player.toUiState() = PlayerUiState
-    (
+    private fun Player.toUiState(): PlayerUiState = PlayerUiState(
         id = this.id,
         name = this.name,
         health = this.health,
         isCuffed = this.isCuffed,
         isBuffed = this.isBuffed,
-        inventory = this.inventory.toList()
+        inventory = this.inventory.toList(),
         isAlive = this.health > 0
     )
+
+    fun useItem(playerUi: PlayerUiState, item: Item)
+    {
+        val realPlayer = playersFromSession.find { it.id == playerUi.id }
+        if (realPlayer != null) {
+            session.useItem(realPlayer, item)
+        }
+    }
+
+    private fun fireShot(targetUi: PlayerUiState)
+    {
+        val realTarget = playersFromSession.find { it.id == targetUi.id }
+        if (realTarget != null) {
+            session.shot(realTarget)
+        }
+    }
+    
+    fun handlePlayerClick(clickedPlayerUi: PlayerUiState)
+    {
+        val clickedIdx = uiState.players.indexOfFirst { it.id == clickedPlayerUi.id }
+
+        if (uiState.targetPlayerIdx == clickedIdx) {
+            fireShot(clickedPlayerUi)
+            uiState = uiState.copy(targetPlayerIdx = null)
+        } else {
+            uiState = uiState.copy(targetPlayerIdx = clickedIdx)
+        }
+    }
 }

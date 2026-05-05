@@ -1,14 +1,23 @@
 plugins {
     kotlin("jvm") version "2.0.0"
     id("org.jetbrains.compose") version "1.6.11"
-    application
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0" // Это критически важно!
 }
 
 group = "org.example"
-version = "1.0-SNAPSHOT"
+version = "1.0.0"
 
 repositories {
+    google()
     mavenCentral()
+}
+
+sourceSets {
+    main {
+        kotlin {
+            srcDirs(listOf("Game"))
+        }
+    }
 }
 
 dependencies {
@@ -19,38 +28,12 @@ dependencies {
     implementation(kotlin("test"))
 }
 
+
 compose.desktop {
     application {
-        mainClass = "GameApplauncherKt"
+        mainClass = "AppLauncherKt"
         nativeDistributions {
-            targetFormats(org.jetbrains.compose.desktop.applicationdsl.TargetFormat.Dmg, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application/dsl.TargetFormat.Deb)
-            packageName = "BuckshotRouletteAdmin"
-            packageVersion = "1.0.0"
+            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
         }
     }
-}
-
-sourceSets {
-    main {
-        kotlin.setSrcDirs(listOf("Game"))
-    }
-    test {
-        kotlin.setSrcDirs(listOf("Game"))
-    }
-}
-
-tasks.withType<Test> {
-    useJUnitPlatform()
-}
-
-application {
-    mainClass.set("Game.AppLauncherKt") 
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(17)
 }

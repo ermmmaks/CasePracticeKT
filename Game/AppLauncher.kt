@@ -15,7 +15,7 @@ class AppLauncher
 
     fun startNewGame(playerCount: Int)
     {
-        if (playerCount < 2 || playerCount > 4) {
+        if (playerCount !in 2..4) {
             println("Maximum is 4 players. Kill unnecessary bug of bones")
             return
         }
