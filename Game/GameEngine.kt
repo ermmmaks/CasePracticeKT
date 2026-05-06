@@ -27,10 +27,13 @@ class GameSession
         private set
 
     //SSTTARRTT RROOUUNNDD
-    fun startRound(live: Int, blank: Int) {
+    fun startRound(live: Int? = null, blank: Int? = null) {
         status = SessionStatus.DISTRIBUTION
 
-        shotgun.load(live, blank)
+        val finalLive = live ?: (1..4).random()
+        val finalBlank = blank ?: (1..4).random()
+
+        shotgun.load(finalLive, finalBlank)
 
         val allPossibleItems = listOf(
             GameItems.Handsaw, GameItems.Magnifier, GameItems.Beer,
@@ -55,7 +58,7 @@ class GameSession
         status = SessionStatus.PLAYER_TURN
 
         val firstPlayer = players[currentPlayerIdx]
-        onEvent?.invoke(GameEvent.ActionLog("$live LIVE, $blank BLANK. SOMEONE WILL BE HURT"))
+        onEvent?.invoke(GameEvent.ActionLog("$finalLive LIVE, $finalBlank BLANK. SOMEONE WILL BE HURT"))
         onEvent?.invoke(GameEvent.TurnChanged(firstPlayer.name))
     }
 
