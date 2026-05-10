@@ -130,7 +130,11 @@ fun Health(health: Int, maxHealth: Int = 4)
 }
 
 @Composable
-fun InventoryGrid(inventory: List<Item>, clickOnItem: (Item) -> Unit)
+fun InventoryGrid(
+    inventory: List<Item>,
+    enabled: Boolean,
+    clickOnItem: (Item) -> Unit
+)
 {
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(2) { rowIndex ->
@@ -144,7 +148,7 @@ fun InventoryGrid(inventory: List<Item>, clickOnItem: (Item) -> Unit)
                             .size(56.dp)
                             .background(Color.DarkGray, RoundedCornerShape(6.dp))
                             .border(1.dp, Color.DarkGray, RoundedCornerShape(6.dp))
-                            .clickable(enabled = item != null) { item?.let { clickOnItem(it) } },
+                            .clickable(enabled = item != null && enabled) { item?.let { clickOnItem(it) } },
                         contentAlignment = Alignment.Center
                     ) {
                         if (item != null) {
@@ -192,9 +196,14 @@ fun PlayerCard
         Health(health = player.health)
         Spacer(modifier = Modifier.height(8.dp))
 
-        InventoryGrid(inventory = player.inventory, clickOnItem = clickOnItem)
+        InventoryGrid(
+            inventory = player.inventory,
+            enabled = isLarge && player.isAlive,
+            clickOnItem = clickOnItem
+        )
 
         if (player.isCuffed) {
+            Spacer(Modifier.height(8.dp))
             Text("CUFFED LOL", color = Color.Cyan, fontSize = 10.sp)
         }
     }

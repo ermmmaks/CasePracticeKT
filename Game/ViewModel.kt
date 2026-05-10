@@ -82,9 +82,17 @@ class ViewModel
 
     fun useItem(playerUi: PlayerUiState, item: Item)
     {
+        val clickedPlayerIdx = uiState.players.indexOfFirst { it.id == playerUi.id }
+
+        if (clickedPlayerIdx != uiState.activePlayerIdx || !playerUi.isAlive) {
+            uiState = uiState.copy(infoMessage = "It's not yours, hands off!")
+            return
+        }
+
         val realPlayer = playersFromSession.find { it.id == playerUi.id }
         if (realPlayer != null) {
             session.useItem(realPlayer, item)
+            refreshPlayers()
         }
     }
 
