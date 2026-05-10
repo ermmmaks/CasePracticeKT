@@ -5,9 +5,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.draw.alpha
 
 @Composable
 fun TableScreen(viewModel: ViewModel)
@@ -16,15 +18,32 @@ fun TableScreen(viewModel: ViewModel)
     val playerCount = state.players.size
 
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0F0F0F))) {
+        if (state.infoMessage.isNotEmpty()) {
+            Text(
+                text = state.infoMessage,
+                color = Color.Yellow,
+                modifier = Modifier.align(Alignment.Center).padding(bottom = 180.dp),
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Column(
+            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+        ) {
+            state.logs.forEach { log ->
+                Text(text = "> #log", color = Color.Gray, fontSize = 12.sp)
+            }
+        }
+
         val targetRotation = when (state.targetPlayerIdx) {
             null -> 0f
             else -> {
                 val relPos = (state.targetPlayerIdx - state.activePlayerIdx + playerCount) % playerCount
                 when (relPos) {
                     0 -> 90f // down
-                    1 -> 180f // left
+                    1 -> 0f // left
                     2 -> 270f // up
-                    3 -> 0f // right
+                    3 -> 180f // right
                     else -> 180f
                 }
             }
@@ -41,10 +60,10 @@ fun TableScreen(viewModel: ViewModel)
 
             val aligment = when (relativePos) {
                 0 -> Alignment.BottomCenter
-                1 -> Alignment.CenterStart
+                1 -> Alignment.CenterEnd
                 2 -> Alignment.TopCenter
-                3 -> Alignment.CenterEnd
-                else -> Alignment.BottomCenter
+                3 -> Alignment.CenterStart
+                else -> Alignment.BottomStart
             }
 
             val isSelected = (index == state.activePlayerIdx)
@@ -69,7 +88,10 @@ fun ShotgunView
     targetRotation: Float,
     modifier: Modifier = Modifier
 ) {
-    val animatedRotation by animateFloatAsState(targetValue = targetRotation)
+    val animatedRotation by animateFloatAsState(
+        targetValue = targetRotation,
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
+    )
     val barrelLength by animateDpAsState(if (isSawedOff) 70.dp else 140.dp)
 
     Column(
@@ -138,9 +160,12 @@ fun PlayerCard
  ) {
     val scale by animateFloatAsState(if (isLarge) 1.2f else 1.0f)
 
+    val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.5f)
+
     Column (
         modifier = modifier
             .graphicsLayer(scaleX = scale, scaleY = scale)
+            .alpha(cardAlpha)
             .background(if (isLarge) Color(0xFF2A2A2A) else Color.Transparent, RoundedCornerShape(8.dp))
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally
