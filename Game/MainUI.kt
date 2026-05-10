@@ -23,15 +23,21 @@ fun TableScreen(viewModel: ViewModel)
                 text = state.infoMessage,
                 color = Color.Yellow,
                 modifier = Modifier.align(Alignment.Center).padding(bottom = 180.dp),
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
             )
         }
 
         Column(
-            modifier = Modifier.align(Alignment.TopStart).padding(16.dp)
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(16.dp)
+                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
         ) {
+            Text("SESSION LOG", color = Color.DarkGray, fontSize = 10.sp, fontWeight = FontWeight.Black)
+            Spacer(Modifier.height(8.dp))
             state.logs.forEach { log ->
-                Text(text = "> #log", color = Color.Gray, fontSize = 12.sp)
+                Text(text = "> $log", color = Color.Gray, fontSize = 13.sp)
             }
         }
 
@@ -74,7 +80,7 @@ fun TableScreen(viewModel: ViewModel)
                 clickOnItem = { item -> viewModel.useItem(player, item) },
                 modifier = Modifier
                     .align(aligment)
-                    .padding(16.dp)
+                    .padding(40.dp)
                     .clickable { viewModel.handlePlayerClick(player) }
             )
         }
@@ -110,14 +116,14 @@ fun ShotgunView
 @Composable
 fun Health(health: Int, maxHealth: Int = 4)
 {
-    Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(maxHealth) { index ->
         val isCharged = index < health
     
         Text (
             text = "⚡",
             color = if (isCharged) Color.Yellow else Color.DarkGray,
-            fontSize = 24.sp
+            fontSize = 28.sp
         )
         }
     }
@@ -126,22 +132,27 @@ fun Health(health: Int, maxHealth: Int = 4)
 @Composable
 fun InventoryGrid(inventory: List<Item>, clickOnItem: (Item) -> Unit)
 {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(2) { rowIndex ->
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(4) { colIndex ->
                     val itemIdx = rowIndex * 4 + colIndex
                     val item = inventory.getOrNull(itemIdx)
 
                     Box (
                         modifier = Modifier
-                            .size(50.dp)
-                            .background(Color.DarkGray, RoundedCornerShape(4.dp))
+                            .size(56.dp)
+                            .background(Color.DarkGray, RoundedCornerShape(6.dp))
+                            .border(1.dp, Color.DarkGray, RoundedCornerShape(6.dp))
                             .clickable(enabled = item != null) { item?.let { clickOnItem(it) } },
                         contentAlignment = Alignment.Center
                     ) {
                         if (item != null) {
-                            Text(item.name.take(1), color = Color.White)
+                            Text(
+                                text = item.name.take(1),
+                                color = Color.White,
+                                fontWeight = FontWeight.ExtraBold
+                            )
                         }
                     }
                 }
@@ -158,22 +169,23 @@ fun PlayerCard
     clickOnItem: (Item) -> Unit,
     modifier: Modifier = Modifier
  ) {
-    val scale by animateFloatAsState(if (isLarge) 1.2f else 1.0f)
+    val scale by animateFloatAsState(if (isLarge) 1.2f else 0.85f)
 
-    val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.5f)
+    val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.6f)
 
     Column (
         modifier = modifier
             .graphicsLayer(scaleX = scale, scaleY = scale)
             .alpha(cardAlpha)
             .background(if (isLarge) Color(0xFF2A2A2A) else Color.Transparent, RoundedCornerShape(8.dp))
-            .padding(8.dp),
+            .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text (
             text = player.name,
             color = if (player.isAlive) Color.White else Color.Red,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
         )
 
         Spacer(modifier = Modifier.height(8.dp))
