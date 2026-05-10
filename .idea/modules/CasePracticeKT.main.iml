@@ -4,8 +4,5 @@
     <content url="file://$MODULE_DIR$/../../Game" dumb="true">
       <sourceFolder url="file://$MODULE_DIR$/../../Game" isTestSource="false" />
     </content>
-    <content url="file://$MODULE_DIR$/../../build/generated/compose/resourceGenerator/kotlin/commonResClass" dumb="true">
-      <sourceFolder url="file://$MODULE_DIR$/../../build/generated/compose/resourceGenerator/kotlin/commonResClass" isTestSource="false" />
-    </content>
   </component>
 </module>
