@@ -1,6 +1,6 @@
 interface GameContext
 {
-    fun peekNextAmmo(): AmmoType
+    fun peekNextAmmo(): AmmoType?
     fun ejectAmmo(): AmmoType
     fun healActivePlayer()
     fun doubleNextDamage()
@@ -65,7 +65,8 @@ class GameSession
     // SSHHOOTT
     fun shot(target: Player)
     {
-        if (status != SessionStatus.PLAYER_TURN) {
+        if (status != SessionStatus.PLAYER_TURN || shotgun.isEmpty()) {
+            checkGameCondition()
             return
         }
 
@@ -78,8 +79,6 @@ class GameSession
 
         target.takeDamage(damageResult)
 
-        checkGameCondition()
-
         onEvent?.invoke(
             GameEvent.ShotFired(
                 type = ammo,
@@ -89,6 +88,8 @@ class GameSession
         )
 
         damageMultiplier = 1
+
+        checkGameCondition()
 
         if (status != SessionStatus.GAME_OVER) {
             val shotSelfWithBlank = (target == players[currentPlayerIdx])
@@ -150,15 +151,24 @@ class GameSession
     }
 
     // EFFECTS
-    override fun peekNextAmmo(): AmmoType
+    override fun peekNextAmmo(): AmmoType?
     {
         return shotgun.peek()
     }
 
     override fun ejectAmmo(): AmmoType
     {
+        if (shotgun.isEmpty()) {
+            return AmmoType.BLANK
+        }
+
         val ammo = shotgun.fire()
         onEvent?.invoke(GameEvent.ActionLog("$ammo was ejected"))
+
+        if (shotgun.isEmpty()) {
+            checkGameCondition()
+        }
+
         return ammo
     }
 

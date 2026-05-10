@@ -5,11 +5,15 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/modules/CasePracticeKT.main.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/GameSessionTest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/ItemsTest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/PlayersTest.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test/ShotgunTests.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/GameEngine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEngine.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/GameEntities.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEntities.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/tests.kt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -42,11 +46,17 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
+  <component name="HighlightingSettingsPerFile">
+    <setting file="file://$PROJECT_DIR$/test/GameSessionTest.kt" root0="SKIP_INSPECTION" />
+  </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
   &quot;associatedIndex&quot;: 6
 }</component>
   <component name="ProjectId" id="3DJRCR8c53iZcOGt7Uwe9wNaN3f" />
+  <component name="ProjectLevelVcsManager">
+    <ConfirmationsSetting value="2" id="Add" />
+  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
@@ -55,6 +65,10 @@
   "keyToString": {
     "Gradle.Build CasePracticeKT.executor": "Run",
     "Gradle.CasePracticeKT [:AppLauncher.main()].executor": "Run",
+    "Gradle.GameItemsTest.executor": "Run",
+    "Gradle.GameSessionTest.executor": "Run",
+    "Gradle.PlayerTest.executor": "Run",
+    "Gradle.ShotgunTest.executor": "Run",
     "JUnit.GameLogicTest.executor": "Run",
     "ModuleVcsDetector.initialDetectionPerformed": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
@@ -64,6 +78,7 @@
     "git-widget-placeholder": "main",
     "kotlin-language-version-configured": "true",
     "last_opened_file_path": "/home/maks/CasePracticeKT/settings.gradle.kts",
+    "onboarding.tips.debug.path": "/home/maks/CasePracticeKT/test/src/Main.java",
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.0",
     "project.structure.side.proportion": "0.0",

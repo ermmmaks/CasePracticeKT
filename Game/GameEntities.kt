@@ -95,18 +95,20 @@ class Shotgun
         return ammo
     }
 
-    fun peek(): AmmoType
+    fun peek(): AmmoType?
     {
         if (barrel.isEmpty()) {
-            throw IllegalStateException("Nothing to peek")
+            return null
         }
 
-        val ammo = barrel.first()
-        return ammo
+        return barrel.first()
     }
 
     fun findFirstLive(): Int
     {
+        if (barrel.isEmpty()) {
+            return -1
+        }
         return barrel.indexOf(AmmoType.LIVE)
     }
 
@@ -117,7 +119,6 @@ class Shotgun
         }
         
         val current = barrel[0]
-
         barrel[0] = if (current == AmmoType.LIVE) AmmoType.BLANK else AmmoType.LIVE
     }
 
