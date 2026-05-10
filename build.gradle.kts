@@ -1,7 +1,7 @@
 plugins {
     kotlin("jvm") version "2.0.0"
     id("org.jetbrains.compose") version "1.6.11"
-    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0" // Это критически важно!
+    id("org.jetbrains.kotlin.plugin.compose") version "2.0.0"
 }
 
 group = "org.example"
@@ -15,7 +15,7 @@ repositories {
 sourceSets {
     main {
         kotlin {
-            srcDirs(listOf("Game"))
+            setSrcDirs(listOf("./Game"))
         }
     }
 }
@@ -31,7 +31,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "AppLauncherKt"
+        mainClass = "AppLauncher"
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
         }
