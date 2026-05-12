@@ -220,7 +220,12 @@ class GameSession
 
     fun useItem(player: Player, item: Item, target: Player? = null) {
         if (player != players[currentPlayerIdx]) {
-            sendInfo("Cheater?! FU")
+            return
+        }
+
+        if (player.health <= 0) {
+            sendInfo("Dead men tell no tales... and use no items")
+            return
         }
 
         if (player.inventory.remove(item)) {

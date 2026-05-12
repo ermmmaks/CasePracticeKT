@@ -1,0 +1,210 @@
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.*
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.Text
+import androidx.compose.runtime.*
+import androidx.compose.ui.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.*
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.*
+import androidx.compose.ui.draw.alpha
+
+@Composable
+fun TableScreen(viewModel: ViewModel)
+{
+    val state = viewModel.uiState
+    val playerCount = state.players.size
+
+    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0F0F0F))) {
+        if (state.infoMessage.isNotEmpty()) {
+            Text(
+                text = state.infoMessage,
+                color = Color.Yellow,
+                modifier = Modifier.align(Alignment.Center).padding(bottom = 180.dp),
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        }
+
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopStart)
+                .padding(16.dp)
+                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+        ) {
+            Text("SESSION LOG", color = Color.DarkGray, fontSize = 10.sp, fontWeight = FontWeight.Black)
+            Spacer(Modifier.height(8.dp))
+            state.logs.forEach { log ->
+                Text(text = "> $log", color = Color.Gray, fontSize = 13.sp)
+            }
+        }
+
+        val targetRotation = when (state.targetPlayerIdx) {
+            null -> 0f
+            else -> {
+                val relPos = (state.targetPlayerIdx - state.activePlayerIdx + playerCount) % playerCount
+                when (relPos) {
+                    0 -> 90f // down
+                    1 -> 0f // left
+                    2 -> 270f // up
+                    3 -> 180f // right
+                    else -> 180f
+                }
+            }
+        }
+
+        ShotgunView (
+            isSawedOff = state.isShotgunSawedOff,
+            targetRotation = targetRotation,
+            modifier = Modifier.align(Alignment.Center)
+        )
+
+        state.players.forEachIndexed { index, player -> 
+            val relativePos = (index - state.activePlayerIdx + playerCount) % playerCount
+
+            val aligment = when (relativePos) {
+                0 -> Alignment.BottomCenter
+                1 -> Alignment.CenterEnd
+                2 -> Alignment.TopCenter
+                3 -> Alignment.CenterStart
+                else -> Alignment.BottomStart
+            }
+
+            val isSelected = (index == state.activePlayerIdx)
+
+            PlayerCard (
+                player = player,
+                isLarge = isSelected,
+                clickOnItem = { item -> viewModel.useItem(player, item) },
+                modifier = Modifier
+                    .align(aligment)
+                    .padding(40.dp)
+                    .clickable { viewModel.handlePlayerClick(player) }
+            )
+        }
+    }
+}
+
+@Composable
+fun ShotgunView
+(
+    isSawedOff: Boolean,
+    targetRotation: Float,
+    modifier: Modifier = Modifier
+) {
+    val animatedRotation by animateFloatAsState(
+        targetValue = targetRotation,
+        animationSpec = spring(stiffness = Spring.StiffnessLow)
+    )
+    val barrelLength by animateDpAsState(if (isSawedOff) 70.dp else 140.dp)
+
+    Column(
+        modifier = modifier.graphicsLayer(rotationZ = animatedRotation),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Box(Modifier.size(50.dp, 30.dp).background(Color(0xFF3E2723), RoundedCornerShape(4.dp)))
+            Box(Modifier.size(barrelLength, 15.dp).background(Color.DarkGray))
+        }
+    }
+}
+
+@Composable
+fun Health(health: Int, maxHealth: Int = 4)
+{
+    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+        repeat(maxHealth) { index ->
+        val isCharged = index < health
+    
+        Text (
+            text = "⚡",
+            color = if (isCharged) Color.Yellow else Color.DarkGray,
+            fontSize = 28.sp
+        )
+        }
+    }
+}
+
+@Composable
+fun InventoryGrid(
+    inventory: List<Item>,
+    enabled: Boolean,
+    clickOnItem: (Item) -> Unit
+)
+{
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        repeat(2) { rowIndex ->
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                repeat(4) { colIndex ->
+                    val itemIdx = rowIndex * 4 + colIndex
+                    val item = inventory.getOrNull(itemIdx)
+
+                    Box (
+                        modifier = Modifier
+                            .size(56.dp)
+                            .background(Color.DarkGray, RoundedCornerShape(6.dp))
+                            .border(1.dp, Color.DarkGray, RoundedCornerShape(6.dp))
+                            .clickable(enabled = item != null && enabled) { item?.let { clickOnItem(it) } },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (item != null) {
+                            Text(
+                                text = item.name.take(1),
+                                color = Color.White,
+                                fontWeight = FontWeight.ExtraBold
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun PlayerCard
+(
+    player: PlayerUiState,
+    isLarge: Boolean,
+    clickOnItem: (Item) -> Unit,
+    modifier: Modifier = Modifier
+ ) {
+    val scale by animateFloatAsState(if (isLarge) 1.2f else 0.85f)
+
+    val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.6f)
+
+    Column (
+        modifier = modifier
+            .graphicsLayer(scaleX = scale, scaleY = scale)
+            .alpha(cardAlpha)
+            .background(if (isLarge) Color(0xFF2A2A2A) else Color.Transparent, RoundedCornerShape(8.dp))
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text (
+            text = player.name,
+            color = if (player.isAlive) Color.White else Color.Red,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+        Health(health = player.health)
+        Spacer(modifier = Modifier.height(8.dp))
+
+        InventoryGrid(
+            inventory = player.inventory,
+            enabled = isLarge && player.isAlive,
+            clickOnItem = clickOnItem
+        )
+
+        if (player.isCuffed) {
+            Spacer(Modifier.height(8.dp))
+            Text("CUFFED LOL", color = Color.Cyan, fontSize = 10.sp)
+        }
+    }
+ }
