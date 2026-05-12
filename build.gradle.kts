@@ -18,6 +18,11 @@ sourceSets {
             setSrcDirs(listOf("./Game"))
         }
     }
+    test {
+        kotlin {
+            srcDirs(listOf("./test"))
+        }
+    }
 }
 
 dependencies {
@@ -35,5 +40,12 @@ compose.desktop {
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
         }
+    }
+}
+
+tasks.withType<Test> {
+    useJUnitPlatform()
+    testLogging {
+        events("passed", "skipped", "failed")
     }
 }
