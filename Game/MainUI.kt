@@ -360,7 +360,7 @@ fun TableScreen(
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         Text("Total Wins: ${currentClickedStats.wins}")
                         Text("Total Matches: ${currentClickedStats.totalGames}", color = Color.White)
-                        Text("WinRate: ${(currentClickedStats.calculateWinRate() * 100).toInt()}%", color = Color.Gray)
+                        Text("WinRate: ${currentClickedStats.formattedWinRate}", color = Color.Gray)
                     }
                 },
                 confirmButton = {
@@ -409,7 +409,7 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(2f))
                     Text("${stats.wins}", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text("${(stats.calculateWinRate() * 100).toInt()}%", color = Color.Gray, modifier = Modifier.weight(1f))
+                    Text(stats.formattedWinRate, color = Color.Gray, modifier = Modifier.weight(1f))
                 }
             }
         }

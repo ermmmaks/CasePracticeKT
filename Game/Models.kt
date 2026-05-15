@@ -61,6 +61,8 @@ class Statistics
         val rate = wins.toDouble() / totalGames
         return rate
     }
+    val formattedWinRate: String
+        get() = "${(calculateWinRate() * 100).toInt()}%"
 }
 
 data class MatchHistory
