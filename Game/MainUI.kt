@@ -9,10 +9,81 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.*
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.font.*
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 
+val ColorBackground = Color(0xFF070907)
+val ColorTerminalGreen = Color(0xFF33FF33)
+val ColorTerminalDim = Color(0xFF195419)
+val ColorRustRed = Color(0xFF8B0000)
+val ColorGunWood = Color(0xFF2B1D19)
+val ColorGunSteel = Color(0xFF1C201C)
+val ColorPaper = Color(0xFFd4C5A1)
+
+val TerminalFont = FontFamily.Monospace
+
+@Composable
+fun TerminalButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    isDangerous: Boolean = false
+) {
+    val activeColor = if (isDangerous) ColorRustRed else ColorTerminalGreen
+    val disabledColor = Color.DarkGray
+
+    Box(
+        modifier = modifier
+            .border(width = 2.dp, color = if (enabled) activeColor else disabledColor, shape = RoundedCornerShape(0.dp))
+            .background(Color.Black)
+            .clickable(enabled = enabled, onClick = onClick)
+            .padding(horizontal = 24.dp, vertical = 12.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = if (enabled) activeColor else disabledColor,
+            fontFamily = TerminalFont,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold
+        )
+    }
+}
+
+@Composable
+fun TerminalTextField(
+    value: String,
+    onValueChange: (String) -> Unit,
+    isError: Boolean,
+    modifier: Modifier = Modifier
+) {
+    TextField(
+        value = value,
+        onValueChange = onValueChange,
+        isError = isError,
+        textStyle = androidx.compose.ui.text.TextStyle(
+            color = if (isError) ColorRustRed else ColorTerminalGreen,
+            fontFamily = TerminalFont,
+            fontSize = 18.sp
+        ),
+        colors = TextFieldDefaults.textFieldColors(
+            textColor = ColorTerminalGreen,
+            backgroundColor = Color(0xFF0F140F),
+            cursorColor = ColorTerminalGreen,
+            focusedIndicatorColor = ColorTerminalGreen,
+            unfocusedIndicatorColor = ColorTerminalDim,
+            errorIndicatorColor = ColorRustRed,
+            errorCursorColor = ColorRustRed
+        ),
+        singleLine = true,
+        shape = RoundedCornerShape(0.dp),
+        modifier = modifier.border(1.dp, if (isError) ColorRustRed else ColorTerminalDim)
+    )
+}
 @Composable
 fun MainAppContainer() {
     val dbService = remember { StatisticsService() }
@@ -21,11 +92,23 @@ fun MainAppContainer() {
     val playerNames = remember { mutableStateListOf<String>() }
     val loggedInPlayers = remember { mutableStateListOf<Player>() }
     var showLeaderboard by remember { mutableStateOf(false) }
-    var rematchTrigger by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier
         .fillMaxSize()
-        .background(Color(0xFF0F0F0F))
+        .background(ColorBackground)
+        .drawBehind {
+            val lineSpacing = 6f
+            var y = 0f
+            while (y < size.height) {
+                drawLine(
+                    color = Color.Black.copy(alpha = 0.18f),
+                    start = Offset(0f, y),
+                    end = Offset(size.width, y),
+                    strokeWidth = 2f
+                )
+                y += lineSpacing
+            }
+        }
     ) {
         when {
             showLeaderboard -> {
@@ -37,13 +120,11 @@ fun MainAppContainer() {
 
             playerCount == 0 -> {
                 SelectionScreen(onSelected = { playerCount = it })
-                Button(
+                TerminalButton(
+                    text = "VIEW PLAYER RATINGS",
                     onClick = { showLeaderboard = true },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp),
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray)
-                ) {
-                    Text("VIEW PLAYER RATINGS", color = Color.White)
-                }
+                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp)
+                )
             }
 
             loggedInPlayers.size < playerCount -> {
@@ -69,19 +150,20 @@ fun MainAppContainer() {
                 val viewModel = remember(rematchTrigger) { ViewModel(session, currentPlayers) }
 
                 LaunchedEffect(rematchTrigger) {
-                    val originalOnEvent = session.onEvent
+                    session.onEvent = null
                     session.onEvent = { event ->
-                        originalOnEvent?.invoke(event)
                         if (event is GameEvent.GameOver) {
                             val winner = loggedInPlayers.find { it.health > 0 }
                             winner?.let {
                                 dbService.updateStats(it.name, loggedInPlayers.map { p -> p.name })
                             }
                         }
+                        // Передача события во ViewModel
                         viewModel.handleEvent(event)
                     }
                     session.startRound()
                 }
+
                 TableScreen(
                     viewModel = viewModel,
                     dbService = dbService,
@@ -106,20 +188,27 @@ fun SelectionScreen(onSelected: (Int) -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("HOW MANY SOULS?", color = Color.White, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(32.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text(
+            text = "HOW MANY SOULS WILL ENTER?",
+            color = ColorRustRed,
+            fontFamily = TerminalFont,
+            fontSize = 28.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "THE DISTRIBUTOR REQUIRES LIVES.",
+            color = ColorTerminalDim,
+            fontFamily = TerminalFont,
+            fontSize = 14.sp
+        )
+        Spacer(Modifier.height(48.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
             (2..4).forEach { count ->
-                Button(
-                    onClick = { onSelected(count) },
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFF2A2A2A))
-                ) {
-                    Text(
-                        "$count",
-                        color = Color.Yellow,
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold)
-                }
+                TerminalButton(
+                    text = "[ $count PLAYERS ]",
+                    onClick = { onSelected(count) }
+                )
             }
         }
     }
@@ -133,82 +222,83 @@ fun LoginScreen(
     alreadyExist: List<Player>
 ) {
     var name by remember { mutableStateOf("") }
-
     val isDuplicate = alreadyExist.any { it.name.equals(name, ignoreCase = true) }
-
     val stats = remember(name) { if (name.isNotBlank()) dbService.getOrCreateStats(name) else null }
 
     Column(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            "PLAYER $playerNum",
-            color = Color.Gray,
-            fontSize = 16.sp
-        )
-        Text(
-            "ENTER YOUR UNIQUE NAME",
-            color = Color.White,
-            fontSize = 24.sp,
+            text = "SUBJECT IDENTIFICATION // PATIENT $playerNum",
+            color = ColorTerminalDim,
+            fontFamily = TerminalFont,
+            fontSize = 14.sp,
             fontWeight = FontWeight.Bold
         )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "ENTER YOUR NAME TO SIGN THE WAIVER",
+            color = ColorTerminalGreen,
+            fontFamily = TerminalFont,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Spacer(Modifier.height(40.dp))
 
-        Spacer(Modifier.height(24.dp))
-
-        TextField(
+        TerminalTextField(
             value = name,
             onValueChange = { name = it },
             isError = isDuplicate,
-            colors = TextFieldDefaults.textFieldColors(
-                textColor = Color.White,
-                backgroundColor = Color(0xFF1A1A1A),
-                cursorColor = Color.Yellow,
-                focusedIndicatorColor = Color.Yellow,
-                unfocusedIndicatorColor = Color.DarkGray
-            ),
-            singleLine = true,
-            modifier = Modifier.width(300.dp)
+            modifier = Modifier.width(360.dp)
         )
 
         if (isDuplicate) {
-            Text("Come up with something original!", color = Color.Red, fontSize = 12.sp)
+            Spacer(Modifier.height(8.dp))
+            Text(
+                text = "ERROR: IDENTITY DUPLICATION DETECTED.",
+                color = ColorRustRed,
+                fontFamily = TerminalFont,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
 
-        if (stats != null && !isDuplicate) {
-            Spacer(Modifier.height(16.dp))
-            Text(
-                text = "RECORD: ${stats.wins} WINS / ${stats.totalGames} GAMES",
-                color = Color.Yellow,
-                fontSize = 14.sp,
-                fontWeight = FontWeight.Light
-            )
-            Text(
-                text = "WINRATE: ${(stats.calculateWinRate() * 100).toInt()}",
-                color = Color.Gray,
-                fontSize = 12.sp
-            )
+        Box(modifier = Modifier.height(100.dp).padding(top = 24.dp)) {
+            if (stats != null && !isDuplicate) {
+                Column(
+                    modifier = Modifier
+                        .width(360.dp)
+                        .border(1.dp, ColorTerminalDim)
+                        .background(Color(0xFF0F140F))
+                        .padding(12.dp)
+                ) {
+                    Text("RETRIEVING DOSSIER...", color = ColorTerminalDim, fontFamily = TerminalFont, fontSize = 11.sp)
+                    Text("PAST ENCOUNTERS: ${stats.totalGames} GAMES", color = ColorTerminalGreen, fontFamily = TerminalFont, fontSize = 14.sp)
+                    Text(
+                        text = "SURVIVAL RATE: ${(stats.calculateWinRate() * 100).toInt()}%",
+                        color = if (stats.calculateWinRate() >= 0.5) ColorTerminalGreen else ColorRustRed,
+                        fontFamily = TerminalFont,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
         }
 
         Spacer(Modifier.height(32.dp))
 
-        Button(
+        TerminalButton(
+            text = "SIGN THE CONTRACT",
             onClick = {
                 if (name.isNotBlank() && !isDuplicate) {
                     onLogin(name)
                     name = ""
                 }
             },
-            enabled = name.isNotBlank() &&!isDuplicate,
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = Color.Yellow,
-                disabledBackgroundColor = Color.DarkGray
-            ),
-            shape = RoundedCornerShape(4.dp)
-        ) {
-            Text("SIGN THE CONTRACT", color = Color.Black, fontWeight = FontWeight.Black)
-        }
+            enabled = name.isNotBlank() && !isDuplicate
+        )
     }
 }
 
@@ -218,7 +308,7 @@ fun TableScreen(
     dbService: StatisticsService,
     onResetToMenu: () -> Unit,
     onRematch: () -> Unit
-)  {
+) {
     val state = viewModel.uiState
     val playerCount = state.players.size
 
@@ -229,67 +319,54 @@ fun TableScreen(
 
     val isMatchEnded = state.players.count { it.isAlive } == 1
 
-    Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0F0F0F))) {
+    Box(modifier = Modifier.fillMaxSize()) {
+
         if (isMatchEnded) {
             Column(
-                modifier = Modifier
-                    .align(Alignment.Center)
-                    .padding(bottom = 220.dp)
-                    .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
-                    .border(2.dp, Color.Red, RoundedCornerShape(12.dp))
-                    .padding(24.dp),
+                modifier = Modifier.align(Alignment.Center).zIndex(5f).border(2.dp, ColorRustRed).background(Color.Black).padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text("MATCH OVER", color = Color.Red, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                Text("MATCH OVER // SYSTEM HALTED", color = ColorRustRed, fontFamily = TerminalFont, fontSize = 24.sp, fontWeight = FontWeight.Black)
                 Spacer(Modifier.height(8.dp))
-
-                Button(
-                    onClick = onRematch,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Yellow),
-                    modifier = Modifier.width(220.dp)
-                ) {
-                    Text("REMATCH", color = Color.Black, fontWeight = FontWeight.Bold)
-                }
-
-                Button(
-                    onClick = onResetToMenu,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray),
-                    modifier = Modifier.width(220.dp)
-                ) {
-                    Text("MAIN MENU", color = Color.White)
-                }
+                TerminalButton(text = "EXECUTE REMATCH", onClick = onRematch, modifier = Modifier.width(240.dp))
+                TerminalButton(text = "RETURN TO MENU", onClick = onResetToMenu, modifier = Modifier.width(240.dp), isDangerous = true)
             }
         } else if (state.infoMessage.isNotEmpty()) {
-            Text(
-                text = state.infoMessage,
-                color = Color.Yellow,
-                modifier = Modifier.align(Alignment.Center).padding(bottom = 180.dp),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        }
-
-        if (state.infoMessage.isNotEmpty()) {
-            Text(
-                text = state.infoMessage,
-                color = Color.Yellow,
-                modifier = Modifier.align(Alignment.Center).padding(bottom = 180.dp),
-                fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
+            Box(modifier = Modifier.align(Alignment.Center).padding(bottom = 200.dp).border(1.dp, ColorTerminalGreen).background(Color(0xFF0A100A)).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Text(text = ">> ${state.infoMessage.uppercase()}", color = ColorTerminalGreen, fontFamily = TerminalFont, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            }
         }
 
         Column(
             modifier = Modifier
                 .align(Alignment.TopStart)
                 .padding(16.dp)
-                .background(Color.Black.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
+                .width(280.dp)
+                .border(1.dp, ColorTerminalDim)
+                .background(Color.Black.copy(alpha = 0.7f))
+                .padding(12.dp)
         ) {
-            Text("SESSION LOG", color = Color.DarkGray, fontSize = 10.sp, fontWeight = FontWeight.Black)
-            Spacer(Modifier.height(8.dp))
-            state.logs.forEach { log ->
-                Text(text = "> $log", color = Color.Gray, fontSize = 13.sp)
+            Text("CRITICAL_LOG.TXT", color = ColorTerminalDim, fontFamily = TerminalFont, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.6.dp))
+
+            // Алгоритм фильтрации: убирает дубликат, если он идет сразу за точно таким же логом
+            val filteredLogs = remember(state.logs) {
+                state.logs.fold(mutableListOf<String>()) { acc, current ->
+                    if (acc.isEmpty() || acc.last() != current) {
+                        acc.add(current)
+                    }
+                    acc
+                }.takeLast(5)
+            }
+
+            filteredLogs.forEach { log ->
+                Text(
+                    text = "> $log",
+                    color = ColorTerminalGreen.copy(alpha = 0.8f),
+                    fontFamily = TerminalFont,
+                    fontSize = 12.sp
+                )
             }
         }
 
@@ -299,26 +376,19 @@ fun TableScreen(
                 else -> {
                     val relPos = (state.targetPlayerIdx - state.activePlayerIdx + playerCount) % playerCount
                     when (relPos) {
-                        0 -> 90f // down
-                        1 -> 0f // left
-                        2 -> 270f // up
-                        3 -> 180f // right
+                        0 -> 90f
+                        1 -> 0f
+                        2 -> 270f
+                        3 -> 180f
                         else -> 180f
                     }
                 }
             }
-
-            ShotgunView(
-                isSawedOff = state.isShotgunSawedOff,
-                targetRotation = targetRotation,
-                modifier = Modifier.align(Alignment.Center)
-            )
+            ShotgunView(isSawedOff = state.isShotgunSawedOff, targetRotation = targetRotation, modifier = Modifier.align(Alignment.Center))
         }
 
-
-        state.players.forEachIndexed { index, player -> 
+        state.players.forEachIndexed { index, player ->
             val relativePos = (index - state.activePlayerIdx + playerCount) % playerCount
-
             val alignment = when (relativePos) {
                 0 -> Alignment.BottomCenter
                 1 -> Alignment.CenterEnd
@@ -326,7 +396,6 @@ fun TableScreen(
                 3 -> Alignment.CenterStart
                 else -> Alignment.BottomStart
             }
-
             val isSelected = (index == state.activePlayerIdx)
 
             PlayerCard(
@@ -335,7 +404,7 @@ fun TableScreen(
                 clickOnItem = { item -> viewModel.useItem(player, item) },
                 modifier = Modifier
                     .align(alignment)
-                    .padding(40.dp)
+                    .padding(32.dp)
                     .clickable {
                         if (isMatchEnded) {
                             selectedPlayerForStats = player.name
@@ -347,33 +416,25 @@ fun TableScreen(
         }
 
         if (selectedPlayerForStats != null && currentClickedStats != null) {
-            AlertDialog(
-                onDismissRequest = { selectedPlayerForStats = null },
-                title = {
-                    Text(
-                        "${selectedPlayerForStats}'s CONTRACT PROFILE",
-                        color = Color.White,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                text = {
+            Box(
+                modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.85f)).clickable { selectedPlayerForStats = null }.zIndex(10f),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    modifier = Modifier.width(400.dp).border(2.dp, ColorTerminalGreen).background(ColorBackground).padding(24.dp).clickable(enabled = false) {},
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    Text("CLASSIFIED DIRECTIVE // DOSSIER: ${selectedPlayerForStats!!.uppercase()}", color = ColorTerminalGreen, fontFamily = TerminalFont, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                    Divider(color = ColorTerminalDim, modifier = Modifier.fillMaxWidth())
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text("Total Wins: ${currentClickedStats.wins}")
-                        Text("Total Matches: ${currentClickedStats.totalGames}", color = Color.White)
-                        Text("WinRate: ${currentClickedStats.formattedWinRate}", color = Color.Gray)
+                        Text("TOTAL OPERATIONS: ${currentClickedStats.totalGames}", color = Color.White, fontFamily = TerminalFont)
+                        Text("CONFIRMED SURVIVALS: ${currentClickedStats.wins}", color = ColorTerminalGreen, fontFamily = TerminalFont)
+                        Text("SURVIVAL RATE: ${currentClickedStats.formattedWinRate}", color = Color.Gray, fontFamily = TerminalFont)
                     }
-                },
-                confirmButton = {
-                    Button(
-                        onClick = { selectedPlayerForStats = null },
-                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray)
-                    ) {
-                        Text("CLOSE", color = Color.White)
-                    }
-                },
-                backgroundColor = Color(0xFF1E1E1E),
-                contentColor = Color.White
-            )
+                    Spacer(Modifier.height(8.dp))
+                    TerminalButton(text = "DISMISS PROFILE", onClick = { selectedPlayerForStats = null }, modifier = Modifier.fillMaxWidth())
+                }
+            }
         }
     }
 }
@@ -387,36 +448,49 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = "HALL OF FAME",
-            color = Color.White,
-            fontSize = 32.sp,
+            text = "DEALER'S REGISTRY // ARCHIVED CONTRACTS",
+            color = ColorRustRed,
+            fontFamily = TerminalFont,
+            fontSize = 24.sp,
             fontWeight = FontWeight.Black
         )
         Spacer(Modifier.height(32.dp))
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, ColorTerminalDim)
+                .background(Color(0xFF0F140F))
+                .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("PLAYER", color = Color.Gray, modifier = Modifier.weight(2f))
-            Text("WINS", color = Color.Gray, modifier = Modifier.weight(1f))
-            Text("RATE", color = Color.Gray, modifier = Modifier.weight(1f))
+            Text("SUBJECT ID", color = ColorTerminalDim, fontFamily = TerminalFont, modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold)
+            Text("SURVIVALS", color = ColorTerminalDim, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text("EFFICIENCY", color = ColorTerminalDim, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
         }
-        Divider(color = Color.DarkGray)
 
-        LazyColumn {
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth().border(1.dp, ColorTerminalDim)
+        ) {
             items(allStats) { (name, stats) ->
-                Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(2f))
-                    Text("${stats.wins}", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text(stats.formattedWinRate, color = Color.Gray, modifier = Modifier.weight(1f))
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            drawLine(ColorTerminalDim, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1f)
+                        }
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Text(name.uppercase(), color = ColorTerminalGreen, fontFamily = TerminalFont, fontWeight = FontWeight.Bold, modifier = Modifier.weight(2f))
+                    Text("${stats.wins}", color = Color.White, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
+                    Text(stats.formattedWinRate, color = Color.Gray, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
                 }
             }
         }
 
-        Button(onClick = onBack, colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray)) {
-            Text("BACK", color = Color.White)
-        }
+        Spacer(Modifier.height(24.dp))
+        TerminalButton(text = "RETURN TO ENCOUNTER", onClick = onBack)
     }
 }
 
@@ -430,33 +504,47 @@ fun ShotgunView(
         targetValue = targetRotation,
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
-    val barrelLength by animateDpAsState(if (isSawedOff) 70.dp else 140.dp)
+    val barrelLength by animateDpAsState(if (isSawedOff) 60.dp else 130.dp)
 
     Column(
         modifier = modifier.graphicsLayer(rotationZ = animatedRotation),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Row(
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.border(1.dp, ColorTerminalDim).background(Color.Black).padding(4.dp)
         ) {
-            Box(Modifier.size(50.dp, 30.dp).background(Color(0xFF3E2723), RoundedCornerShape(4.dp)))
-            Box(Modifier.size(barrelLength, 15.dp).background(Color.DarkGray))
+            Box(Modifier.size(45.dp, 24.dp).background(ColorGunWood).border(1.dp, Color.Black))
+            Box(Modifier.size(20.dp, 16.dp).background(Color.DarkGray))
+            Box(Modifier.size(barrelLength, 12.dp).background(ColorGunSteel).border(1.dp, Color.Black))
         }
     }
 }
 
 @Composable
 fun Health(health: Int, maxHealth: Int = 4) {
-    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-        repeat(maxHealth) { index ->
-        val isCharged = index < health
-    
-        Text (
-            text = "⚡",
-            color = if (isCharged) Color.Yellow else Color.DarkGray,
-            fontSize = 28.sp
-        )
-        }
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = Modifier.padding(vertical = 4.dp)
+        ) {
+            repeat(maxHealth) { index ->
+                val isCharged = index < health
+                Box(
+                    modifier = Modifier
+                        .border(1.dp, if (isCharged) ColorTerminalGreen else ColorTerminalDim)
+                        .background(if (isCharged) Color(0xFF142B14) else Color.Transparent)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = if (isCharged) "ON" else "-",
+                        color = if (isCharged) ColorTerminalGreen else ColorTerminalDim,
+                        fontFamily = TerminalFont,
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                }
+            }
     }
 }
 
@@ -472,21 +560,26 @@ fun InventoryGrid(
                 repeat(4) { colIndex ->
                     val itemIdx = rowIndex * 4 + colIndex
                     val item = inventory.getOrNull(itemIdx)
+                    val isInteractive = item != null && enabled
 
-                    Box (
+                    Box(
                         modifier = Modifier
-                            .size(56.dp)
-                            .background(Color.DarkGray, RoundedCornerShape(6.dp))
-                            .border(1.dp, Color.DarkGray, RoundedCornerShape(6.dp))
-                            .clickable(enabled = item != null && enabled) { item?.let { clickOnItem(it) } },
+                            .size(52.dp)
+                            .border(width = 1.dp, color = if (isInteractive) ColorTerminalGreen else ColorTerminalDim)
+                            .background(if (isInteractive) Color(0xFF090D09) else Color.Black)
+                            .clickable(enabled = isInteractive) { item?.let { clickOnItem(it) } },
                         contentAlignment = Alignment.Center
                     ) {
                         if (item != null) {
                             Text(
-                                text = item.name.take(1),
-                                color = Color.White,
+                                text = item.name.take(3).uppercase(),
+                                color = if (enabled) ColorTerminalGreen else ColorTerminalDim,
+                                fontFamily = TerminalFont,
+                                fontSize = 12.sp,
                                 fontWeight = FontWeight.ExtraBold
                             )
+                        } else {
+                            Text(".", color = Color(0xFF152215), fontFamily = TerminalFont, fontSize = 14.sp)
                         }
                     }
                 }
@@ -501,39 +594,49 @@ fun PlayerCard(
     isLarge: Boolean,
     clickOnItem: (Item) -> Unit,
     modifier: Modifier = Modifier
- ) {
-    val scale by animateFloatAsState(if (isLarge) 1.2f else 0.85f)
-
-    val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.6f)
+) {
+    val scale by animateFloatAsState(if (isLarge) 1.15f else 0.9f)
+    val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.5f)
 
     Column(
         modifier = modifier
             .graphicsLayer(scaleX = scale, scaleY = scale)
             .alpha(cardAlpha)
-            .background(if (isLarge) Color(0xFF2A2A2A) else Color.Transparent, RoundedCornerShape(8.dp))
+            .border(
+                width = if (isLarge) 2.dp else 1.dp,
+                color = if (!player.isAlive) ColorRustRed else if (isLarge) ColorTerminalGreen else ColorTerminalDim
+            )
+            .background(if (isLarge) Color(0xFF070A07) else Color.Black)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
-            text = player.name,
-            color = if (player.isAlive) Color.White else Color.Red,
+            text = player.name.uppercase(),
+            color = if (player.isAlive) Color.White else ColorRustRed,
+            fontFamily = TerminalFont,
             fontWeight = FontWeight.Bold,
-            fontSize = 20.sp
+            fontSize = 18.sp
         )
 
         Spacer(modifier = Modifier.height(8.dp))
         Health(health = player.health)
-        Spacer(modifier = Modifier.height(8.dp))
+        Spacer(modifier = Modifier.height(12.dp))
 
-        InventoryGrid(
-            inventory = player.inventory,
-            enabled = isLarge && player.isAlive,
-            clickOnItem = clickOnItem
-        )
+        if (player.isAlive) {
+            InventoryGrid(
+                inventory = player.inventory,
+                enabled = isLarge,
+                clickOnItem = clickOnItem
+            )
+        } else {
+            Text("SYSTEM HALTED // DEAD", color = ColorRustRed, fontFamily = TerminalFont, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+        }
 
         if (player.isCuffed) {
-            Spacer(Modifier.height(8.dp))
-            Text("CUFFED LOL", color = Color.Cyan, fontSize = 10.sp)
+            Spacer(Modifier.height(10.dp))
+            Box(modifier = Modifier.border(1.dp, ColorRustRed).background(Color(0xFF260000)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                Text("RESTRICTED // CUFFED", color = ColorRustRed, fontFamily = TerminalFont, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            }
         }
     }
- }
+}
