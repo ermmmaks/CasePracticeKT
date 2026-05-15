@@ -41,7 +41,7 @@ dependencies {
 
 compose.desktop {
     application {
-        mainClass = "AppLauncher"
+        mainClass = "GameLauncher"
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
         }

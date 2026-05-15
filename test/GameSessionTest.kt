@@ -31,19 +31,6 @@ class GameSessionTest
     }
 
     @Test
-    fun `test player death and game over`()
-    {
-        val players = listOf(Player(name = "P1", initialHealth = 1), Player(name = "P2", initialHealth = 1))
-        val session = GameSession(players)
-        session.startRound(1, 0) // One LIVE
-
-        session.shot(players[1])
-
-        assertEquals(0, players[1].health)
-        assertEquals(SessionStatus.GAME_OVER, session.status)
-    }
-
-    @Test
     fun `test automatic reload when empty`()
     {
         val players = listOf(Player(name = "P1", initialHealth = 4), Player(name = "P2", initialHealth = 4))

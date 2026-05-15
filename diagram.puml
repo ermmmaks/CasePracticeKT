@@ -1,10 +1,10 @@
 @startuml
 skinparam classAttributeIconSize 0
 
-' --- Интерфейсы и Абстракции (I) ---
+' --- Interfaces ---
 
 interface GameContext {
-    + peekNextAmmo(): AmmoType
+    + peekNextAmmo(): AmmoType?
     + ejectAmmo(): AmmoType
     + healActivePlayer()
     + doubleNextDamage()
@@ -19,27 +19,50 @@ interface Item {
     + applyEffect(context: GameContext, user: Player, target: Player? = null)
 }
 
-' --- Основные классы (C) ---
+' --- Presentation & Navigation Layer (UI & VM) ---
 
-class AppLauncher {
+class GameLauncher {
+    + main(args: Array<String>)
+}
+
+class MainAppContainer {
+    - playerCount: Int
+    - loggedInPlayers: MutableList<Player>
+    - showLeaderboard: Boolean
+    + MainAppContainer()
+}
+
+class ViewModel {
+    + uiState: UiState
+    + handleEvent(event: GameEvent)
+    + refreshPlayers()
+    + useItem(playerUi: PlayerUiState, item: Item)
+    + handlePlayerClick(clickedPlayerUi: PlayerUiState)
+}
+
+' --- Domain Logic Layer (Core Engine) ---
+
+class AppLauncher << (C,#FF7700) Console Entry >> {
     - currentSession: GameSession
+    - players: List<Player>
+    - activePlayer: Player?
     + main(args: Array<String>)
     + startNewGame()
     + handleGameEvent(event: GameEvent)
 }
 
-class GameSession implements GameContext{
-    - id: UUID
+class GameSession implements GameContext {
     - status: SessionStatus
     - players: List<Player>
     - shotgun: Shotgun
     - currentPlayerIdx: Int
-    
-    + shot(target: Player)    
+    + onEvent: ((GameEvent) -> Unit)?
+
+    + shot(target: Player)
     + nextTurn()
     + checkGameCondition()
-    
-    + peekNextAmmo(): AmmoType
+
+    + peekNextAmmo(): AmmoType?
     + ejectAmmo(): AmmoType
     + healActivePlayer()
     + doubleNextDamage()
@@ -54,23 +77,42 @@ class Shotgun {
     - barrel: MutableList<AmmoType>
     + load(live: Int, blank: Int)
     + fire(): AmmoType
-    + peek(): AmmoType
-    + findFirstLive()
+    + peek(): AmmoType?
+    + findFirstLive(): Int
     + invertCurrentAmmo()
     + isEmpty(): Boolean
 }
 
 class Player {
-    - id: UUID
     + name: String
     - health: Int
-    - isCuffed: Boolean
-    - isBuffed: Boolean
-    - inventory: MutableList<Item>
-    
+    + isCuffed: Boolean
+    + isBuffed: Boolean
+    + inventory: MutableList<Item>
+
     + takeDamage(value: Int)
-    + heal(value: Int)
+    + heal()
     + addItem(item: Item): Boolean
+}
+
+' --- Data Access Layer (Exposed ORM & SQLite) ---
+
+class StatisticsService {
+    + getOrCreateStats(playerName: String): Statistics
+    + updateStats(winnerName: String, participants: List<String>)
+    + getLeaderboard(): List<Pair<String, Statistics>>
+}
+
+entity PlayersTable << (O,#FF7700) object >> {
+    + name: Column<String> [PK]
+    + wins: Column<Int>
+    + totalGames: Column<Int>
+}
+
+entity MatchHistoryTable << (O,#FF7700) object >> {
+    + matchId: Column<UUID> [PK]
+    + winnerName: Column<String>
+    + timestamp: Column<Long>
 }
 
 class Statistics {
@@ -80,13 +122,13 @@ class Statistics {
 }
 
 class MatchHistory {
-    - matchId: UUID
-    + winnerId: UUID
-    + losersId: List<UUID>
-    + save()
+    + matchId: UUID
+    + winnerName: String
+    + participants: List<String>
+    + timestamp: Long
 }
 
-' --- Перечисления (E) ---
+' --- Enumerations ---
 
 enum AmmoType {
     LIVE
@@ -95,23 +137,34 @@ enum AmmoType {
 
 enum SessionStatus {
     LOADING
-    DEALING
+    DISTRIBUTION
     PLAYER_TURN
     GAME_OVER
 }
 
-' --- Отношения и зависимости ---
+' --- Relationships and Dependencies ---
 
+' Navigation & UI architecture
+GameLauncher ..> MainAppContainer
+MainAppContainer "1" *-- "0..1" GameSession
+MainAppContainer "1" *-- "1" StatisticsService
+MainAppContainer ..> ViewModel
+
+' Engine logic mapping
 AppLauncher "1" *-- "0..1" GameSession
+AppLauncher "1" *-- "1" StatisticsService
 GameSession "1" *-- "2..4" Player
 GameSession "1" *-- "1" Shotgun
 GameSession "1" *-- "1" SessionStatus
 
+' Domain constraints
 Item ..> GameContext
 Player "1" *-- "1" Statistics
 Player "1" o-- "0..8" Item
-
 Shotgun ..> AmmoType
-AppLauncher ..> MatchHistory
 
+' Persistence mapping
+StatisticsService ..> PlayersTable
+StatisticsService ..> MatchHistoryTable
+StatisticsService ..> MatchHistory
 @enduml
