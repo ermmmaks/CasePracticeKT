@@ -31,6 +31,11 @@ dependencies {
 
     implementation("org.junit.jupiter:junit-jupiter:5.10.0")
     implementation(kotlin("test"))
+
+    implementation("org.jetbrains.exposed:exposed-core:0.50.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.50.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.50.1")
+    implementation("org.xerial:sqlite-jdbc:3.45.2.0")
 }
 
 
