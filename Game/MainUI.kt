@@ -21,7 +21,6 @@ val ColorTerminalDim = Color(0xFF195419)
 val ColorRustRed = Color(0xFF8B0000)
 val ColorGunWood = Color(0xFF2B1D19)
 val ColorGunSteel = Color(0xFF1C201C)
-val ColorPaper = Color(0xFFd4C5A1)
 
 val TerminalFont = FontFamily.Monospace
 
