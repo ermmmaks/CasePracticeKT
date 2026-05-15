@@ -31,7 +31,7 @@ class ViewModel(
         session.onEvent = { event -> handleEvent(event) }
     }
 
-    private fun handleEvent(event: GameEvent) {
+    fun handleEvent(event: GameEvent) {
         when (event) {
             is GameEvent.TurnChanged -> {
                 val newIdx = uiState.players.indexOfFirst { it.name == event.newActivePlayerName }
@@ -52,7 +52,7 @@ class ViewModel(
             }
 
             is GameEvent.GameOver -> {
-                uiState = uiState.copy(infoMessage = "GAME OVER")
+                refreshPlayers()
             }
         }
     }

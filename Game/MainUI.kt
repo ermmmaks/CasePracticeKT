@@ -18,8 +18,10 @@ fun MainAppContainer() {
     val dbService = remember { StatisticsService() }
 
     var playerCount by remember { mutableStateOf(0) }
+    val playerNames = remember { mutableStateListOf<String>() }
     val loggedInPlayers = remember { mutableStateListOf<Player>() }
     var showLeaderboard by remember { mutableStateOf(false) }
+    var rematchTrigger by remember { mutableStateOf(0) }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -51,16 +53,22 @@ fun MainAppContainer() {
                     alreadyExist = loggedInPlayers,
                     onLogin = { name ->
                         dbService.getOrCreateStats(name)
+                        playerNames.add(name)
                         loggedInPlayers.add(Player(name = name, initialHealth = 4))
                     }
                 )
             }
 
             else -> {
-                val session = remember { GameSession(loggedInPlayers.toList()) }
-                val viewModel = remember { ViewModel(session, loggedInPlayers.toList()) }
+                var rematchTrigger by remember { mutableStateOf(0) }
 
-                LaunchedEffect(Unit) {
+                val currentPlayers = remember(rematchTrigger) {
+                    playerNames.map { Player(name = it, initialHealth = 4) }
+                }
+                val session = remember(rematchTrigger) { GameSession(currentPlayers) }
+                val viewModel = remember(rematchTrigger) { ViewModel(session, currentPlayers) }
+
+                LaunchedEffect(rematchTrigger) {
                     val originalOnEvent = session.onEvent
                     session.onEvent = { event ->
                         originalOnEvent?.invoke(event)
@@ -70,10 +78,22 @@ fun MainAppContainer() {
                                 dbService.updateStats(it.name, loggedInPlayers.map { p -> p.name })
                             }
                         }
+                        viewModel.handleEvent(event)
                     }
                     session.startRound()
                 }
-                TableScreen(viewModel = viewModel)
+                TableScreen(
+                    viewModel = viewModel,
+                    dbService = dbService,
+                    onResetToMenu = {
+                        loggedInPlayers.clear()
+                        playerCount = 0
+                    },
+                    onRematch = {
+                        session.onEvent = null
+                        rematchTrigger++
+                    }
+                )
             }
         }
     }
@@ -193,11 +213,63 @@ fun LoginScreen(
 }
 
 @Composable
-fun TableScreen(viewModel: ViewModel)  {
+fun TableScreen(
+    viewModel: ViewModel,
+    dbService: StatisticsService,
+    onResetToMenu: () -> Unit,
+    onRematch: () -> Unit
+)  {
     val state = viewModel.uiState
     val playerCount = state.players.size
 
+    var selectedPlayerForStats by remember { mutableStateOf<String?>(null) }
+    val currentClickedStats = remember(selectedPlayerForStats) {
+        if (selectedPlayerForStats != null) dbService.getOrCreateStats(selectedPlayerForStats!!) else null
+    }
+
+    val isMatchEnded = state.players.count { it.isAlive } == 1
+
     Box(modifier = Modifier.fillMaxSize().background(Color(0xFF0F0F0F))) {
+        if (isMatchEnded) {
+            Column(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(bottom = 220.dp)
+                    .background(Color.Black.copy(alpha = 0.8f), RoundedCornerShape(12.dp))
+                    .border(2.dp, Color.Red, RoundedCornerShape(12.dp))
+                    .padding(24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text("MATCH OVER", color = Color.Red, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                Spacer(Modifier.height(8.dp))
+
+                Button(
+                    onClick = onRematch,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.Yellow),
+                    modifier = Modifier.width(220.dp)
+                ) {
+                    Text("REMATCH", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+
+                Button(
+                    onClick = onResetToMenu,
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray),
+                    modifier = Modifier.width(220.dp)
+                ) {
+                    Text("MAIN MENU", color = Color.White)
+                }
+            }
+        } else if (state.infoMessage.isNotEmpty()) {
+            Text(
+                text = state.infoMessage,
+                color = Color.Yellow,
+                modifier = Modifier.align(Alignment.Center).padding(bottom = 180.dp),
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        }
+
         if (state.infoMessage.isNotEmpty()) {
             Text(
                 text = state.infoMessage,
@@ -221,25 +293,28 @@ fun TableScreen(viewModel: ViewModel)  {
             }
         }
 
-        val targetRotation = when (state.targetPlayerIdx) {
-            null -> 0f
-            else -> {
-                val relPos = (state.targetPlayerIdx - state.activePlayerIdx + playerCount) % playerCount
-                when (relPos) {
-                    0 -> 90f // down
-                    1 -> 0f // left
-                    2 -> 270f // up
-                    3 -> 180f // right
-                    else -> 180f
+        if (!isMatchEnded) {
+            val targetRotation = when (state.targetPlayerIdx) {
+                null -> 0f
+                else -> {
+                    val relPos = (state.targetPlayerIdx - state.activePlayerIdx + playerCount) % playerCount
+                    when (relPos) {
+                        0 -> 90f // down
+                        1 -> 0f // left
+                        2 -> 270f // up
+                        3 -> 180f // right
+                        else -> 180f
+                    }
                 }
             }
+
+            ShotgunView(
+                isSawedOff = state.isShotgunSawedOff,
+                targetRotation = targetRotation,
+                modifier = Modifier.align(Alignment.Center)
+            )
         }
 
-        ShotgunView(
-            isSawedOff = state.isShotgunSawedOff,
-            targetRotation = targetRotation,
-            modifier = Modifier.align(Alignment.Center)
-        )
 
         state.players.forEachIndexed { index, player -> 
             val relativePos = (index - state.activePlayerIdx + playerCount) % playerCount
@@ -261,7 +336,43 @@ fun TableScreen(viewModel: ViewModel)  {
                 modifier = Modifier
                     .align(alignment)
                     .padding(40.dp)
-                    .clickable { viewModel.handlePlayerClick(player) }
+                    .clickable {
+                        if (isMatchEnded) {
+                            selectedPlayerForStats = player.name
+                        } else {
+                            viewModel.handlePlayerClick(player)
+                        }
+                    }
+            )
+        }
+
+        if (selectedPlayerForStats != null && currentClickedStats != null) {
+            AlertDialog(
+                onDismissRequest = { selectedPlayerForStats = null },
+                title = {
+                    Text(
+                        "${selectedPlayerForStats}'s CONTRACT PROFILE",
+                        color = Color.White,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
+                text = {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text("Total Wins: ${currentClickedStats.wins}")
+                        Text("Total Matches: ${currentClickedStats.totalGames}", color = Color.White)
+                        Text("WinRate: ${(currentClickedStats.calculateWinRate() * 100).toInt()}%", color = Color.Gray)
+                    }
+                },
+                confirmButton = {
+                    Button(
+                        onClick = { selectedPlayerForStats = null },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color.DarkGray)
+                    ) {
+                        Text("CLOSE", color = Color.White)
+                    }
+                },
+                backgroundColor = Color(0xFF1E1E1E),
+                contentColor = Color.White
             )
         }
     }
@@ -298,7 +409,7 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
                 Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
                     Text(name, color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(2f))
                     Text("${stats.wins}", color = Color.White, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                    Text("${(stats.calculateWinRate() * 100).toInt()}}%", color = Color.Gray, modifier = Modifier.weight(1f))
+                    Text("${(stats.calculateWinRate() * 100).toInt()}%", color = Color.Gray, modifier = Modifier.weight(1f))
                 }
             }
         }
