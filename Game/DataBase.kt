@@ -1,5 +1,4 @@
 import org.jetbrains.exposed.sql.*
-import org.jetbrains.exposed.sql.SqlExpressionBuilder.plus
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
 
@@ -17,9 +16,13 @@ object MatchHistoryTable : Table("match_history") {
     override val primaryKey = PrimaryKey(matchId)
 }
 
-class StatisticsService {
+class StatisticsService(
+    // Default production URL for the actual application session
+    dbUrl: String = "jdbc:sqlite:./stats.db"
+) {
     init {
-        Database.connect("jdbc:sqlite:./stats.db", "org.sqlite.JDBC")
+        // Dynamically connect using the passed parameter
+        Database.connect(dbUrl, "org.sqlite.JDBC")
         transaction {
             SchemaUtils.create(PlayersTable, MatchHistoryTable)
         }
@@ -40,17 +43,28 @@ class StatisticsService {
     }
 
     fun updateStats(winnerName: String, participants: List<String>) = transaction {
+        // Save match history metadata
         MatchHistoryTable.insert {
             it[matchId] = UUID.randomUUID()
             it[MatchHistoryTable.winnerName] = winnerName
             it[timestamp] = System.currentTimeMillis()
         }
 
+        // Loop through each participant to perform a safe atomic update
         participants.forEach { pName ->
+            // Ensure the player profile exists in the database first
+            getOrCreateStats(pName)
+
+            // Perform direct atomic SQL increment without using CustomOperator
             PlayersTable.update({ PlayersTable.name eq pName }) {
-                it[PlayersTable.totalGames] = PlayersTable.totalGames + 1
-                if (pName == winnerName) {
-                    it[PlayersTable.wins] = PlayersTable.wins + 1
+                with(SqlExpressionBuilder) {
+                    // This generates pure "total_games = total_games + 1" in SQL
+                    it[totalGames] = PlayersTable.totalGames + 1
+
+                    if (pName == winnerName) {
+                        // This generates pure "wins = wins + 1" in SQL
+                        it[wins] = PlayersTable.wins + 1
+                    }
                 }
             }
         }
