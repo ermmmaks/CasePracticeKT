@@ -16,6 +16,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import kotlin.system.exitProcess
 
 val ColorBackground = Color(0xFF0F0E12)
 val ColorTerminalGreen = Color(0xFF33FF33)
@@ -91,7 +92,8 @@ fun TerminalTextField(
 
 @Composable
 fun SelectionScreen(
-    onSelected: (Int) -> Unit
+    onSelected: (Int) -> Unit,
+    onExit: () -> Unit
 ) {
     Column(
         modifier = Modifier.fillMaxSize().padding(32.dp),
@@ -121,6 +123,8 @@ fun SelectionScreen(
             TerminalButton(text = "3 PLAYERS", onClick = { onSelected(3) })
             TerminalButton(text = "4 PLAYERS", onClick = { onSelected(4) })
         }
+        Spacer(Modifier.height(32.dp))
+        TerminalButton(text = "EXIT SYSTEM", onClick = onExit, isDangerous = true)
     }
 }
 
@@ -159,7 +163,10 @@ fun MainAppContainer() {
             }
 
             playerCount == 0 -> {
-                SelectionScreen(onSelected = { playerCount = it })
+                SelectionScreen(
+                    onSelected = { playerCount = it },
+                    onExit = { exitProcess(0) }
+                )
                 TerminalButton(
                     text = "VIEW PLAYER RATINGS",
                     onClick = { showLeaderboard = true },
@@ -176,6 +183,14 @@ fun MainAppContainer() {
                         dbService.getOrCreateStats(name)
                         playerNames.add(name)
                         loggedInPlayers.add(Player(name = name, initialHealth = 4))
+                    },
+                    onBack = {
+                        if (loggedInPlayers.isNotEmpty()) {
+                            loggedInPlayers.removeLast()
+                            playerNames.removeLast()
+                        } else {
+                            playerCount = 0
+                        }
                     }
                 )
             }
@@ -226,7 +241,8 @@ fun LoginScreen(
     playerNum: Int,
     onLogin: (String) -> Unit,
     dbService: StatisticsService,
-    alreadyExist: List<Player>
+    alreadyExist: List<Player>,
+    onBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
     val isDuplicate = alreadyExist.any { it.name.equals(name, ignoreCase = true) }
@@ -296,16 +312,24 @@ fun LoginScreen(
 
         Spacer(Modifier.height(32.dp))
 
-        TerminalButton(
-            text = "SIGN THE CONTRACT",
-            onClick = {
-                if (name.isNotBlank() && !isDuplicate) {
-                    onLogin(name)
-                    name = ""
-                }
-            },
-            enabled = name.isNotBlank() && !isDuplicate
-        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            TerminalButton(
+                text = "PREVIOUS STEP",
+                onClick = onBack
+            )
+            TerminalButton(
+                text = "SIGN THE CONTRACT",
+                onClick = {
+                    if (name.isNotBlank() && !isDuplicate) {
+                        onLogin(name)
+                        name = ""
+                    }
+                },
+                enabled = name.isNotBlank() && !isDuplicate
+            )
+        }
     }
 }
 
@@ -533,6 +557,7 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
         ) {
             Text("SUBJECT ID", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold)
             Text("SURVIVALS", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text("TOTAL GAMES", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
             Text("EFFICIENCY", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
         }
 
@@ -551,6 +576,7 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
                 ) {
                     Text(name.uppercase(), color = ColorTerminalGreen, fontFamily = TerminalFont, fontWeight = FontWeight.Bold, modifier = Modifier.weight(2f))
                     Text("${stats.wins}", color = Color.White, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
+                    Text("${stats.totalGames}", color = Color.White, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
                     Text(stats.formattedWinRate, color = Color.Gray, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
                 }
             }

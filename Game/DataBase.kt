@@ -10,59 +10,57 @@ object PlayersTable : Table("players") {
 }
 
 object MatchHistoryTable : Table("match_history") {
-    val matchId = uuid("math_id")
+    val matchId = uuid("match_id")
     val winnerName = varchar("winner_name", 50)
     val timestamp = long("timestamp")
     override val primaryKey = PrimaryKey(matchId)
 }
 
 class StatisticsService(
-    // Default production URL for the actual application session
     dbUrl: String = "jdbc:sqlite:./stats.db"
 ) {
     init {
-        // Dynamically connect using the passed parameter
         Database.connect(dbUrl, "org.sqlite.JDBC")
         transaction {
-            SchemaUtils.create(PlayersTable, MatchHistoryTable)
+            SchemaUtils.createMissingTablesAndColumns(PlayersTable, MatchHistoryTable)
         }
     }
 
-    fun getOrCreateStats(playerName: String): Statistics = transaction {
-        val row = PlayersTable.selectAll().where { PlayersTable.name eq playerName }.singleOrNull()
-        if (row == null) {
+    private fun ensurePlayerExists(playerName: String) {
+        val exists = PlayersTable.selectAll().where { PlayersTable.name eq playerName }.any()
+        if (!exists) {
             PlayersTable.insert {
                 it[name] = playerName
                 it[wins] = 0
                 it[totalGames] = 0
             }
-            Statistics(0, 0)
-        } else {
-            Statistics(row[PlayersTable.wins], row[PlayersTable.totalGames])
         }
     }
 
+    fun getOrCreateStats(playerName: String): Statistics = transaction {
+        ensurePlayerExists(playerName)
+
+        PlayersTable.selectAll()
+            .where { PlayersTable.name eq playerName }
+            .map { Statistics(it[PlayersTable.wins], it[PlayersTable.totalGames]) }
+            .single()
+    }
+
     fun updateStats(winnerName: String, participants: List<String>) = transaction {
-        // Save match history metadata
         MatchHistoryTable.insert {
             it[matchId] = UUID.randomUUID()
             it[MatchHistoryTable.winnerName] = winnerName
             it[timestamp] = System.currentTimeMillis()
         }
 
-        // Loop through each participant to perform a safe atomic update
         participants.forEach { pName ->
-            // Ensure the player profile exists in the database first
-            getOrCreateStats(pName)
+            ensurePlayerExists(pName)
 
-            // Perform direct atomic SQL increment without using CustomOperator
             PlayersTable.update({ PlayersTable.name eq pName }) {
                 with(SqlExpressionBuilder) {
-                    // This generates pure "total_games = total_games + 1" in SQL
                     it[totalGames] = PlayersTable.totalGames + 1
 
                     if (pName == winnerName) {
-                        // This generates pure "wins = wins + 1" in SQL
                         it[wins] = PlayersTable.wins + 1
                     }
                 }
