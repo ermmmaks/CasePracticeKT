@@ -15,7 +15,9 @@ data class UiState(
     val targetPlayerIdx: Int? = null,
     val logs: List<String> = emptyList(),
     val isShotgunSawedOff: Boolean = false,
-    val infoMessage: String = ""
+    val infoMessage: String = "",
+    val pendingItemUser: PlayerUiState? = null,
+    val pendingItem: Item? = null
 )
 
 class ViewModel(
@@ -26,7 +28,7 @@ class ViewModel(
         players = playersFromSession.map { it.toUiState() }
     ))
         private set
-    
+
     init {
         session.onEvent = { event -> handleEvent(event) }
     }
@@ -35,7 +37,7 @@ class ViewModel(
         when (event) {
             is GameEvent.TurnChanged -> {
                 val newIdx = uiState.players.indexOfFirst { it.name == event.newActivePlayerName }
-                uiState = uiState.copy(activePlayerIdx = newIdx, isShotgunSawedOff = false)
+                uiState = uiState.copy(activePlayerIdx = newIdx, isShotgunSawedOff = false, infoMessage = "")
                 refreshPlayers()
             }
             is GameEvent.ShotFired, is GameEvent.ItemUsed -> {
@@ -80,6 +82,15 @@ class ViewModel(
             return
         }
 
+        if (item.name == "Handcuffs") {
+            uiState = uiState.copy(
+                pendingItemUser = playerUi,
+                pendingItem = item,
+                infoMessage = "SELECT TARGET FOR HANDCUFFS"
+            )
+            return
+        }
+
         val realPlayer = playersFromSession.find { it.name == playerUi.name }
         if (realPlayer != null) {
             session.useItem(realPlayer, item)
@@ -93,9 +104,24 @@ class ViewModel(
             session.shot(realTarget)
         }
     }
-    
+
     fun handlePlayerClick(clickedPlayerUi: PlayerUiState)  {
         val clickedIdx = uiState.players.indexOfFirst { it.name == clickedPlayerUi.name }
+
+        if (uiState.pendingItem != null && uiState.pendingItemUser != null) {
+            val realUser = playersFromSession.find { it.name == uiState.pendingItemUser!!.name }
+            val realTarget = playersFromSession.find { it.name == clickedPlayerUi.name }
+            if (realUser != null && realTarget != null) {
+                session.useItem(realUser, uiState.pendingItem!!, realTarget)
+                uiState = uiState.copy(
+                    pendingItem = null,
+                    pendingItemUser = null,
+                    infoMessage = ""
+                )
+                refreshPlayers()
+            }
+            return
+        }
 
         if (uiState.targetPlayerIdx == clickedIdx) {
             fireShot(clickedPlayerUi)

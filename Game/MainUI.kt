@@ -14,13 +14,18 @@ import androidx.compose.ui.unit.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.drawscope.Stroke
 
-val ColorBackground = Color(0xFF070907)
+val ColorBackground = Color(0xFF0F0E12)
 val ColorTerminalGreen = Color(0xFF33FF33)
 val ColorTerminalDim = Color(0xFF195419)
-val ColorRustRed = Color(0xFF8B0000)
-val ColorGunWood = Color(0xFF2B1D19)
-val ColorGunSteel = Color(0xFF1C201C)
+val ColorRustRed = Color(0xFFD62828)
+val ColorOrangeWarning = Color(0xFFF77F00)
+val ColorBlueTech = Color(0xFF00B4D8)
+val ColorYellowAmber = Color(0xFFFCBF49)
+val ColorGunWood = Color(0xFF5C3D2E)
+val ColorGunSteel = Color(0xFF3A3F44)
 
 val TerminalFont = FontFamily.Monospace
 
@@ -83,6 +88,42 @@ fun TerminalTextField(
         modifier = modifier.border(1.dp, if (isError) ColorRustRed else ColorTerminalDim)
     )
 }
+
+@Composable
+fun SelectionScreen(
+    onSelected: (Int) -> Unit
+) {
+    Column(
+        modifier = Modifier.fillMaxSize().padding(32.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "CHAMBER CONFIGURATION // MULTIPLAYER PROTOCOL",
+            color = ColorTerminalDim,
+            fontFamily = TerminalFont,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Bold
+        )
+        Spacer(Modifier.height(8.dp))
+        Text(
+            text = "SELECT THE NUMBER OF PARTICIPANTS",
+            color = ColorTerminalGreen,
+            fontFamily = TerminalFont,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.ExtraBold
+        )
+        Spacer(Modifier.height(40.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            TerminalButton(text = "2 PLAYERS", onClick = { onSelected(2) })
+            TerminalButton(text = "3 PLAYERS", onClick = { onSelected(3) })
+            TerminalButton(text = "4 PLAYERS", onClick = { onSelected(4) })
+        }
+    }
+}
+
 @Composable
 fun MainAppContainer() {
     val dbService = remember { StatisticsService() }
@@ -157,7 +198,6 @@ fun MainAppContainer() {
                                 dbService.updateStats(it.name, loggedInPlayers.map { p -> p.name })
                             }
                         }
-                        // Передача события во ViewModel
                         viewModel.handleEvent(event)
                     }
                     session.startRound()
@@ -168,45 +208,13 @@ fun MainAppContainer() {
                     dbService = dbService,
                     onResetToMenu = {
                         loggedInPlayers.clear()
+                        playerNames.clear()
                         playerCount = 0
                     },
                     onRematch = {
                         session.onEvent = null
                         rematchTrigger++
                     }
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun SelectionScreen(onSelected: (Int) -> Unit) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Text(
-            text = "HOW MANY SOULS WILL ENTER?",
-            color = ColorRustRed,
-            fontFamily = TerminalFont,
-            fontSize = 28.sp,
-            fontWeight = FontWeight.Bold
-        )
-        Spacer(Modifier.height(8.dp))
-        Text(
-            text = "THE DISTRIBUTOR REQUIRES LIVES.",
-            color = ColorTerminalDim,
-            fontFamily = TerminalFont,
-            fontSize = 14.sp
-        )
-        Spacer(Modifier.height(48.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-            (2..4).forEach { count ->
-                TerminalButton(
-                    text = "[ $count PLAYERS ]",
-                    onClick = { onSelected(count) }
                 )
             }
         }
@@ -276,7 +284,7 @@ fun LoginScreen(
                     Text("RETRIEVING DOSSIER...", color = ColorTerminalDim, fontFamily = TerminalFont, fontSize = 11.sp)
                     Text("PAST ENCOUNTERS: ${stats.totalGames} GAMES", color = ColorTerminalGreen, fontFamily = TerminalFont, fontSize = 14.sp)
                     Text(
-                        text = "SURVIVAL RATE: ${(stats.calculateWinRate() * 100).toInt()}%",
+                        text = "SURVIVAL RATE: ${stats.formattedWinRate}",
                         color = if (stats.calculateWinRate() >= 0.5) ColorTerminalGreen else ColorRustRed,
                         fontFamily = TerminalFont,
                         fontSize = 14.sp,
@@ -332,8 +340,8 @@ fun TableScreen(
                 TerminalButton(text = "RETURN TO MENU", onClick = onResetToMenu, modifier = Modifier.width(240.dp), isDangerous = true)
             }
         } else if (state.infoMessage.isNotEmpty()) {
-            Box(modifier = Modifier.align(Alignment.Center).padding(bottom = 200.dp).border(1.dp, ColorTerminalGreen).background(Color(0xFF0A100A)).padding(horizontal = 16.dp, vertical = 8.dp)) {
-                Text(text = ">> ${state.infoMessage.uppercase()}", color = ColorTerminalGreen, fontFamily = TerminalFont, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+            Box(modifier = Modifier.align(Alignment.Center).padding(bottom = 220.dp).border(1.dp, ColorOrangeWarning).background(Color(0xFF1C1308)).padding(horizontal = 16.dp, vertical = 8.dp)) {
+                Text(text = ">> ${state.infoMessage.uppercase()}", color = ColorOrangeWarning, fontFamily = TerminalFont, fontWeight = FontWeight.Bold, fontSize = 18.sp)
             }
         }
 
@@ -346,10 +354,9 @@ fun TableScreen(
                 .background(Color.Black.copy(alpha = 0.7f))
                 .padding(12.dp)
         ) {
-            Text("CRITICAL_LOG.TXT", color = ColorTerminalDim, fontFamily = TerminalFont, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Text("CRITICAL_LOG.TXT", color = ColorTerminalGreen, fontFamily = TerminalFont, fontSize = 11.sp, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(6.6.dp))
 
-            // Алгоритм фильтрации: убирает дубликат, если он идет сразу за точно таким же логом
             val filteredLogs = remember(state.logs) {
                 state.logs.fold(mutableListOf<String>()) { acc, current ->
                     if (acc.isEmpty() || acc.last() != current) {
@@ -371,29 +378,90 @@ fun TableScreen(
 
         if (!isMatchEnded) {
             val targetRotation = when (state.targetPlayerIdx) {
-                null -> 0f
+                null -> {
+                    when (playerCount) {
+                        2 -> {
+                            if (state.activePlayerIdx == 0) 90f else -90f
+                        }
+                        3 -> {
+                            when (state.activePlayerIdx) {
+                                0 -> 90f
+                                1 -> 0f
+                                2 -> 180f
+                                else -> 90f
+                            }
+                        }
+                        else -> {
+                            when (state.activePlayerIdx) {
+                                0 -> 90f
+                                1 -> 0f
+                                2 -> -90f
+                                3 -> 180f
+                                else -> 90f
+                            }
+                        }
+                    }
+                }
                 else -> {
-                    val relPos = (state.targetPlayerIdx - state.activePlayerIdx + playerCount) % playerCount
-                    when (relPos) {
-                        0 -> 90f
-                        1 -> 0f
-                        2 -> 270f
-                        3 -> 180f
-                        else -> 180f
+                    when (playerCount) {
+                        2 -> {
+                            if (state.targetPlayerIdx == 0) 90f else -90f
+                        }
+                        3 -> {
+                            when (state.targetPlayerIdx) {
+                                0 -> 90f
+                                1 -> 0f
+                                2 -> 180f
+                                else -> 90f
+                            }
+                        }
+                        else -> {
+                            when (state.targetPlayerIdx) {
+                                0 -> 90f
+                                1 -> 0f
+                                2 -> -90f
+                                3 -> 180f
+                                else -> 90f
+                            }
+                        }
                     }
                 }
             }
-            ShotgunView(isSawedOff = state.isShotgunSawedOff, targetRotation = targetRotation, modifier = Modifier.align(Alignment.Center))
+            Box(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .offset(y = (-40).dp)
+            ) {
+                ShotgunView(isSawedOff = state.isShotgunSawedOff, targetRotation = targetRotation)
+            }
         }
 
         state.players.forEachIndexed { index, player ->
-            val relativePos = (index - state.activePlayerIdx + playerCount) % playerCount
-            val alignment = when (relativePos) {
-                0 -> Alignment.BottomCenter
-                1 -> Alignment.CenterEnd
-                2 -> Alignment.TopCenter
-                3 -> Alignment.CenterStart
-                else -> Alignment.BottomStart
+            val alignment = when (playerCount) {
+                2 -> {
+                    when (index) {
+                        0 -> Alignment.BottomCenter
+                        1 -> Alignment.TopCenter
+                        else -> Alignment.BottomCenter
+                    }
+                }
+                3 -> {
+                    when (index) {
+                        0 -> Alignment.BottomCenter
+                        1 -> Alignment.CenterEnd
+                        2 -> Alignment.CenterStart
+                        else -> Alignment.BottomCenter
+                    }
+                }
+                else -> {
+                    when (index) {
+                        0 -> Alignment.BottomCenter
+                        1 -> Alignment.CenterEnd
+                        2 -> Alignment.TopCenter
+                        3 -> Alignment.CenterStart
+                        else -> Alignment.BottomCenter
+                    }
+                }
             }
             val isSelected = (index == state.activePlayerIdx)
 
@@ -403,7 +471,7 @@ fun TableScreen(
                 clickOnItem = { item -> viewModel.useItem(player, item) },
                 modifier = Modifier
                     .align(alignment)
-                    .padding(32.dp)
+                    .padding(12.dp)
                     .clickable {
                         if (isMatchEnded) {
                             selectedPlayerForStats = player.name
@@ -463,9 +531,9 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
                 .padding(12.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text("SUBJECT ID", color = ColorTerminalDim, fontFamily = TerminalFont, modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold)
-            Text("SURVIVALS", color = ColorTerminalDim, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
-            Text("EFFICIENCY", color = ColorTerminalDim, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text("SUBJECT ID", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(2f), fontWeight = FontWeight.Bold)
+            Text("SURVIVALS", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
+            Text("EFFICIENCY", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1f), fontWeight = FontWeight.Bold)
         }
 
         LazyColumn(
@@ -503,19 +571,104 @@ fun ShotgunView(
         targetValue = targetRotation,
         animationSpec = spring(stiffness = Spring.StiffnessLow)
     )
-    val barrelLength by animateDpAsState(if (isSawedOff) 60.dp else 130.dp)
+    val barrelLength by animateDpAsState(if (isSawedOff) 75.dp else 165.dp)
 
-    Column(
-        modifier = modifier.graphicsLayer(rotationZ = animatedRotation),
-        horizontalAlignment = Alignment.CenterHorizontally
+    Box(
+        modifier = modifier
+            .graphicsLayer(rotationZ = animatedRotation)
+            .padding(16.dp),
+        contentAlignment = Alignment.CenterStart
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.border(1.dp, ColorTerminalDim).background(Color.Black).padding(4.dp)
+        Canvas(
+            modifier = Modifier.size(width = 300.dp, height = 44.dp)
         ) {
-            Box(Modifier.size(45.dp, 24.dp).background(ColorGunWood).border(1.dp, Color.Black))
-            Box(Modifier.size(20.dp, 16.dp).background(Color.DarkGray))
-            Box(Modifier.size(barrelLength, 12.dp).background(ColorGunSteel).border(1.dp, Color.Black))
+            val scaleX = size.width / 300.dp.toPx()
+            val scaleY = size.height / 44.dp.toPx()
+
+            val stockWidth = 85.dp.toPx() * scaleX
+            val stockHeight = 24.dp.toPx() * scaleY
+            val stockY = (size.height - stockHeight) / 2
+            drawRect(
+                color = ColorGunWood,
+                topLeft = Offset(0f, stockY),
+                size = Size(stockWidth, stockHeight)
+            )
+            drawRect(
+                color = Color.Black,
+                topLeft = Offset(0f, stockY),
+                size = Size(stockWidth, stockHeight),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+
+            val gripWidth = 45.dp.toPx() * scaleX
+            val gripHeight = 20.dp.toPx() * scaleY
+            val gripX = stockWidth
+            val gripY = stockY + 4.dp.toPx() * scaleY
+            drawRect(
+                color = ColorGunWood,
+                topLeft = Offset(gripX, gripY),
+                size = Size(gripWidth, gripHeight)
+            )
+            drawRect(
+                color = Color.Black,
+                topLeft = Offset(gripX, gripY),
+                size = Size(gripWidth, gripHeight),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+
+            val receiverWidth = 50.dp.toPx() * scaleX
+            val receiverHeight = 22.dp.toPx() * scaleY
+            val receiverX = stockWidth + gripWidth
+            val receiverY = (size.height - receiverHeight) / 2
+            drawRect(
+                color = Color.DarkGray,
+                topLeft = Offset(receiverX, receiverY),
+                size = Size(receiverWidth, receiverHeight)
+            )
+            drawRect(
+                color = Color.Black,
+                topLeft = Offset(receiverX, receiverY),
+                size = Size(receiverWidth, receiverHeight),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+
+            val currentBarrelLength = barrelLength.toPx() * scaleX
+            val barrelHeight = 6.dp.toPx() * scaleY
+            val barrelX = receiverX + receiverWidth
+            val barrelY1 = (size.height / 2) - 7.dp.toPx() * scaleY
+            val barrelY2 = (size.height / 2) + 1.dp.toPx() * scaleY
+
+            drawRect(
+                color = ColorGunSteel,
+                topLeft = Offset(barrelX, barrelY1),
+                size = Size(currentBarrelLength, barrelHeight)
+            )
+            drawRect(
+                color = Color.Black,
+                topLeft = Offset(barrelX, barrelY1),
+                size = Size(currentBarrelLength, barrelHeight),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+
+            drawRect(
+                color = ColorGunSteel,
+                topLeft = Offset(barrelX, barrelY2),
+                size = Size(currentBarrelLength, barrelHeight)
+            )
+            drawRect(
+                color = Color.Black,
+                topLeft = Offset(barrelX, barrelY2),
+                size = Size(currentBarrelLength, barrelHeight),
+                style = Stroke(width = 1.5.dp.toPx())
+            )
+
+            val ribHeight = 2.dp.toPx() * scaleY
+            val ribY = barrelY1 - ribHeight
+            drawRect(
+                color = Color.Black,
+                topLeft = Offset(barrelX, ribY),
+                size = Size(currentBarrelLength, ribHeight)
+            )
         }
     }
 }
@@ -523,27 +676,22 @@ fun ShotgunView(
 @Composable
 fun Health(health: Int, maxHealth: Int = 4) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = Modifier.padding(vertical = 4.dp)
-        ) {
-            repeat(maxHealth) { index ->
-                val isCharged = index < health
-                Box(
-                    modifier = Modifier
-                        .border(1.dp, if (isCharged) ColorTerminalGreen else ColorTerminalDim)
-                        .background(if (isCharged) Color(0xFF142B14) else Color.Transparent)
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Text(
-                        text = if (isCharged) "ON" else "-",
-                        color = if (isCharged) ColorTerminalGreen else ColorTerminalDim,
-                        fontFamily = TerminalFont,
-                        fontSize = 11.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-            }
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        modifier = Modifier
+            .border(1.5.dp, ColorOrangeWarning)
+            .background(Color(0xFF140F07))
+            .padding(horizontal = 14.dp, vertical = 8.dp)
+    ) {
+        repeat(maxHealth) { index ->
+            val isCharged = index < health
+            Text(
+                text = "⚡",
+                color = if (isCharged) ColorYellowAmber else ColorRustRed.copy(alpha = 0.15f),
+                fontFamily = TerminalFont,
+                fontSize = 20.sp,
+                fontWeight = FontWeight.Bold
+            )
+        }
     }
 }
 
@@ -553,30 +701,60 @@ fun InventoryGrid(
     enabled: Boolean,
     clickOnItem: (Item) -> Unit
 ) {
+    val allItemsState = rememberUpdatedState(inventory)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(2) { rowIndex ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(4) { colIndex ->
                     val itemIdx = rowIndex * 4 + colIndex
-                    val item = inventory.getOrNull(itemIdx)
+                    val item = allItemsState.value.getOrNull(itemIdx)
                     val isInteractive = item != null && enabled
+
+                    val itemColor = when (item?.name) {
+                        "Handsaw" -> ColorRustRed
+                        "Handcuffs" -> ColorOrangeWarning
+                        "Cigarette" -> ColorBlueTech
+                        "Beer" -> ColorYellowAmber
+                        else -> ColorTerminalGreen
+                    }
+
+                    val itemIcon = when (item?.name) {
+                        "Handsaw" -> "🪚"
+                        "Handcuffs" -> "🔗"
+                        "Cigarette" -> "🚬"
+                        "Beer" -> "🍺"
+                        "Magnifier" -> "🔎"
+                        "Phone" -> "📞"
+                        "Inverter" -> "🔄"
+                        else -> ""
+                    }
 
                     Box(
                         modifier = Modifier
                             .size(52.dp)
-                            .border(width = 1.dp, color = if (isInteractive) ColorTerminalGreen else ColorTerminalDim)
+                            .border(width = 1.dp, color = if (isInteractive) itemColor else ColorTerminalDim)
                             .background(if (isInteractive) Color(0xFF090D09) else Color.Black)
                             .clickable(enabled = isInteractive) { item?.let { clickOnItem(it) } },
                         contentAlignment = Alignment.Center
                     ) {
                         if (item != null) {
-                            Text(
-                                text = item.name.take(3).uppercase(),
-                                color = if (enabled) ColorTerminalGreen else ColorTerminalDim,
-                                fontFamily = TerminalFont,
-                                fontSize = 12.sp,
-                                fontWeight = FontWeight.ExtraBold
-                            )
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center
+                            ) {
+                                Text(
+                                    text = itemIcon,
+                                    fontSize = 18.sp,
+                                    modifier = Modifier.padding(bottom = 2.dp)
+                                )
+                                Text(
+                                    text = item.name.take(3).uppercase(),
+                                    color = if (enabled) itemColor else ColorTerminalDim,
+                                    fontFamily = TerminalFont,
+                                    fontSize = 10.sp,
+                                    fontWeight = FontWeight.ExtraBold
+                                )
+                            }
                         } else {
                             Text(".", color = Color(0xFF152215), fontFamily = TerminalFont, fontSize = 14.sp)
                         }
@@ -594,32 +772,38 @@ fun PlayerCard(
     clickOnItem: (Item) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scale by animateFloatAsState(if (isLarge) 1.15f else 0.9f)
+    val scale by animateFloatAsState(if (isLarge) 1.05f else 0.9f)
     val cardAlpha by animateFloatAsState(if (isLarge) 1f else 0.5f)
+
+    val currentCardBorderColor = when {
+        !player.isAlive -> ColorRustRed
+        isLarge -> ColorTerminalGreen
+        else -> ColorTerminalDim
+    }
 
     Column(
         modifier = modifier
             .graphicsLayer(scaleX = scale, scaleY = scale)
             .alpha(cardAlpha)
             .border(
-                width = if (isLarge) 2.dp else 1.dp,
-                color = if (!player.isAlive) ColorRustRed else if (isLarge) ColorTerminalGreen else ColorTerminalDim
+                width = if (isLarge) 2.5.dp else 1.dp,
+                color = currentCardBorderColor
             )
-            .background(if (isLarge) Color(0xFF070A07) else Color.Black)
+            .background(if (isLarge) Color(0xFF0A140D) else Color.Black)
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text(
             text = player.name.uppercase(),
-            color = if (player.isAlive) Color.White else ColorRustRed,
+            color = if (player.isAlive) (if (isLarge) ColorTerminalGreen else Color.White) else ColorRustRed,
             fontFamily = TerminalFont,
             fontWeight = FontWeight.Bold,
-            fontSize = 18.sp
+            fontSize = 20.sp
         )
 
-        Spacer(modifier = Modifier.height(8.dp))
-        Health(health = player.health)
         Spacer(modifier = Modifier.height(12.dp))
+        Health(health = player.health)
+        Spacer(modifier = Modifier.height(16.dp))
 
         if (player.isAlive) {
             InventoryGrid(
@@ -632,9 +816,9 @@ fun PlayerCard(
         }
 
         if (player.isCuffed) {
-            Spacer(Modifier.height(10.dp))
-            Box(modifier = Modifier.border(1.dp, ColorRustRed).background(Color(0xFF260000)).padding(horizontal = 8.dp, vertical = 2.dp)) {
-                Text("RESTRICTED // CUFFED", color = ColorRustRed, fontFamily = TerminalFont, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(12.dp))
+            Box(modifier = Modifier.border(1.dp, ColorOrangeWarning).background(Color(0xFF261200)).padding(horizontal = 8.dp, vertical = 2.dp)) {
+                Text("RESTRICTED // CUFFED", color = ColorOrangeWarning, fontFamily = TerminalFont, fontSize = 10.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
