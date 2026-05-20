@@ -31,38 +31,21 @@ class MainAppContainer {
     - loggedInPlayers: SnapshotStateList<Player>
     - showLeaderboard: Boolean
     - rematchTrigger: Int
+    - currentScreen: String
     + MainAppContainer()
-    + TerminalButton(text: String, onClick: () -> Unit, enabled: Boolean, isDangerous: Boolean)
-    + TerminalTextField(value: String, onValueChange: (String) -> Unit, isError: Boolean)
-    + SelectionScreen(onSelected: (Int) -> Unit)
-    + LoginScreen(playerNum: Int, onLogin: (String) -> Unit, dbService: StatisticsService, alreadyExist: List<Player>)
-    + LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit)
-    + TableScreen(viewModel: ViewModel, dbService: StatisticsService, onResetToMenu: () -> Unit, onRematch: () -> Unit)
-    + PlayerCard(player: PlayerUiState, isLarge: Boolean, clickOnItem: (Item) -> Unit)
-    + Health(health: Int, maxHealth: Int)
-    + InventoryGrid(inventory: List<Item>, enabled: Boolean, clickOnItem: (Item) -> Unit)
-    + ShotgunView(isSawedOff: Boolean, targetRotation: Float)
 }
 
 class ViewModel {
     + uiState: UiState
     + handleEvent(event: GameEvent)
-    - refreshPlayers()
     + useItem(playerUi: PlayerUiState, item: Item)
-    - fireShot(targetUi: PlayerUiState)
     + handlePlayerClick(clickedPlayerUi: PlayerUiState)
 }
 
 ' --- Domain Logic Layer (Core Engine) ---
 
 class AppLauncher << (C,#FF7700) Console Entry >> {
-    - currentSession: GameSession
-    - players: List<Player>
-    - activePlayer: Player?
-    - dbService: StatisticsService
     + main(args: Array<String>)
-    + startNewGame()
-    + handleGameEvent(event: GameEvent)
 }
 
 class GameSession implements GameContext {
@@ -73,17 +56,6 @@ class GameSession implements GameContext {
     + onEvent: ((GameEvent) -> Unit)?
 
     + shot(target: Player)
-    + nextTurn()
-    + checkGameCondition()
-
-    + peekNextAmmo(): AmmoType?
-    + ejectAmmo(): AmmoType
-    + healActivePlayer()
-    + doubleNextDamage()
-    + skipOpponent(target: Player)
-    + getPhoneCall()
-    + invertCurrentAmmo()
-    + sendInfo(message: String)
     + useItem(player: Player, item: Item, target: Player? = null)
 }
 
@@ -115,6 +87,7 @@ class StatisticsService {
     + getOrCreateStats(playerName: String): Statistics
     + updateStats(winnerName: String, participants: List<String>)
     + getLeaderboard(): List<Pair<String, Statistics>>
+    + getMatchHistory(): List<MatchLog>
     + clearAllData()
 }
 
@@ -137,11 +110,12 @@ class Statistics {
     + calculateWinRate(): Double
 }
 
-class MatchHistory {
+class MatchLog {
     + matchId: UUID
     + winnerName: String
-    + participants: List<String>
     + timestamp: Long
+    + gameNumber: Int
+    + participants: List<String>
 }
 
 ' --- Enumerations ---
@@ -160,27 +134,23 @@ enum SessionStatus {
 
 ' --- Relationships and Dependencies ---
 
-' Navigation & UI architecture
 GameLauncher ..> MainAppContainer
 MainAppContainer "1" *-- "0..1" GameSession
 MainAppContainer "1" *-- "1" StatisticsService
 MainAppContainer ..> ViewModel
 
-' Engine logic mapping
 AppLauncher "1" *-- "0..1" GameSession
 AppLauncher "1" *-- "1" StatisticsService
 GameSession "1" *-- "2..4" Player
 GameSession "1" *-- "1" Shotgun
 GameSession "1" *-- "1" SessionStatus
 
-' Domain constraints
 Item ..> GameContext
 Player "1" *-- "1" Statistics
 Player "1" o-- "0..8" Item
 Shotgun ..> AmmoType
 
-' Persistence mapping
 StatisticsService ..> PlayersTable
 StatisticsService ..> MatchHistoryTable
-StatisticsService ..> MatchHistory
+StatisticsService ..> MatchLog
 @enduml

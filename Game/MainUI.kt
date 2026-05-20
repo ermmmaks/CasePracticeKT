@@ -17,6 +17,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import kotlin.system.exitProcess
+import java.util.Date
+import java.text.SimpleDateFormat
 
 val ColorBackground = Color(0xFF0F0E12)
 val ColorTerminalGreen = Color(0xFF33FF33)
@@ -135,7 +137,7 @@ fun MainAppContainer() {
     var playerCount by remember { mutableStateOf(0) }
     val playerNames = remember { mutableStateListOf<String>() }
     val loggedInPlayers = remember { mutableStateListOf<Player>() }
-    var showLeaderboard by remember { mutableStateOf(false) }
+    var currentScreen by remember { mutableStateOf("menu") }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -154,48 +156,62 @@ fun MainAppContainer() {
             }
         }
     ) {
-        when {
-            showLeaderboard -> {
+        when (currentScreen) {
+            "leaderboard" -> {
                 LeaderboardScreen(
                     dbService = dbService,
-                    onBack = { showLeaderboard = false }
+                    onBack = { currentScreen = "menu" }
                 )
             }
-
-            playerCount == 0 -> {
-                SelectionScreen(
-                    onSelected = { playerCount = it },
-                    onExit = { exitProcess(0) }
-                )
-                TerminalButton(
-                    text = "VIEW PLAYER RATINGS",
-                    onClick = { showLeaderboard = true },
-                    modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp)
-                )
-            }
-
-            loggedInPlayers.size < playerCount -> {
-                LoginScreen(
-                    playerNum = loggedInPlayers.size + 1,
+            "history" -> {
+                HistoryScreen(
                     dbService = dbService,
-                    alreadyExist = loggedInPlayers,
-                    onLogin = { name ->
-                        dbService.getOrCreateStats(name)
-                        playerNames.add(name)
-                        loggedInPlayers.add(Player(name = name, initialHealth = 4))
-                    },
-                    onBack = {
-                        if (loggedInPlayers.isNotEmpty()) {
-                            loggedInPlayers.removeLast()
-                            playerNames.removeLast()
-                        } else {
-                            playerCount = 0
-                        }
-                    }
+                    onBack = { currentScreen = "menu" }
                 )
             }
-
-            else -> {
+            "menu" -> {
+                if (playerCount == 0) {
+                    SelectionScreen(
+                        onSelected = { playerCount = it },
+                        onExit = { exitProcess(0) }
+                    )
+                    Row(
+                        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 100.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        TerminalButton(
+                            text = "VIEW PLAYER RATINGS",
+                            onClick = { currentScreen = "leaderboard" }
+                        )
+                        TerminalButton(
+                            text = "MATCH LOGS",
+                            onClick = { currentScreen = "history" }
+                        )
+                    }
+                } else if (loggedInPlayers.size < playerCount) {
+                    LoginScreen(
+                        playerNum = loggedInPlayers.size + 1,
+                        dbService = dbService,
+                        alreadyExist = loggedInPlayers,
+                        onLogin = { name ->
+                            dbService.getOrCreateStats(name)
+                            playerNames.add(name)
+                            loggedInPlayers.add(Player(name = name, initialHealth = 4))
+                        },
+                        onBack = {
+                            if (loggedInPlayers.isNotEmpty()) {
+                                loggedInPlayers.removeLast()
+                                playerNames.removeLast()
+                            } else {
+                                playerCount = 0
+                            }
+                        }
+                    )
+                } else {
+                    currentScreen = "table"
+                }
+            }
+            "table" -> {
                 var rematchTrigger by remember { mutableStateOf(0) }
 
                 val currentPlayers = remember(rematchTrigger) {
@@ -208,9 +224,9 @@ fun MainAppContainer() {
                     session.onEvent = null
                     session.onEvent = { event ->
                         if (event is GameEvent.GameOver) {
-                            val winner = loggedInPlayers.find { it.health > 0 }
+                            val winner = currentPlayers.find { it.health > 0 }
                             winner?.let {
-                                dbService.updateStats(it.name, loggedInPlayers.map { p -> p.name })
+                                dbService.updateStats(it.name, currentPlayers.map { p -> p.name })
                             }
                         }
                         viewModel.handleEvent(event)
@@ -225,6 +241,7 @@ fun MainAppContainer() {
                         loggedInPlayers.clear()
                         playerNames.clear()
                         playerCount = 0
+                        currentScreen = "menu"
                     },
                     onRematch = {
                         session.onEvent = null
@@ -272,7 +289,12 @@ fun LoginScreen(
 
         TerminalTextField(
             value = name,
-            onValueChange = { name = it },
+            onValueChange = { input ->
+                // Жесткое ограничение в 50 символов для предотвращения падения SQLite
+                if (input.length <= 10) {
+                    name = input
+                }
+            },
             isError = isDuplicate,
             modifier = Modifier.width(360.dp)
         )
@@ -323,7 +345,7 @@ fun LoginScreen(
                 text = "SIGN THE CONTRACT",
                 onClick = {
                     if (name.isNotBlank() && !isDuplicate) {
-                        onLogin(name)
+                        onLogin(name.trim())
                         name = ""
                     }
                 },
@@ -578,6 +600,86 @@ fun LeaderboardScreen(dbService: StatisticsService, onBack: () -> Unit) {
                     Text("${stats.wins}", color = Color.White, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
                     Text("${stats.totalGames}", color = Color.White, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
                     Text(stats.formattedWinRate, color = Color.Gray, fontFamily = TerminalFont, modifier = Modifier.weight(1f))
+                }
+            }
+        }
+
+        Spacer(Modifier.height(24.dp))
+        TerminalButton(text = "RETURN TO ENCOUNTER", onClick = onBack)
+    }
+}
+
+@Composable
+fun HistoryScreen(dbService: StatisticsService, onBack: () -> Unit) {
+    val history = remember { dbService.getMatchHistory() }
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss") }
+
+    Column(
+        modifier = Modifier.fillMaxSize().padding(64.dp),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Text(
+            text = "ARCHIVED ENCOUNTERS // INCIDENT LOGS",
+            color = ColorRustRed,
+            fontFamily = TerminalFont,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Black
+        )
+        Spacer(Modifier.height(32.dp))
+
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, ColorTerminalDim)
+                .background(Color(0xFF0F140F))
+                .padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("GAME #", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(0.8f), fontWeight = FontWeight.Bold)
+            Text("WINNER", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1.2f), fontWeight = FontWeight.Bold)
+            Text("OTHER PARTICIPANTS", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(2.5f), fontWeight = FontWeight.Bold)
+            Text("TIMESTAMP", color = ColorTerminalGreen, fontFamily = TerminalFont, modifier = Modifier.weight(1.5f), fontWeight = FontWeight.Bold)
+        }
+
+        LazyColumn(
+            modifier = Modifier.weight(1f).fillMaxWidth().border(1.dp, ColorTerminalDim)
+        ) {
+            items(history) { match ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .drawBehind {
+                            drawLine(ColorTerminalDim, Offset(0f, size.height), Offset(size.width, size.height), strokeWidth = 1f)
+                        }
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(text = "MATCH_${match.gameNumber}", color = Color.Gray, fontFamily = TerminalFont, modifier = Modifier.weight(0.8f))
+
+                    Text(
+                        text = match.winnerName.uppercase(),
+                        color = ColorTerminalGreen,
+                        fontFamily = TerminalFont,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.weight(1.2f)
+                    )
+
+                    Row(
+                        modifier = Modifier.weight(2.5f),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        match.participants.filter { it != match.winnerName }.forEach { loser ->
+                            Text(
+                                text = loser.uppercase(),
+                                color = ColorRustRed,
+                                fontFamily = TerminalFont,
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
+                    }
+
+                    Text(text = dateFormat.format(Date(match.timestamp)), color = Color.White, fontFamily = TerminalFont, modifier = Modifier.weight(1.5f))
                 }
             }
         }

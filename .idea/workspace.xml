@@ -8,7 +8,7 @@
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/DataBase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/DataBase.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/MainUI.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/description.md" beforeDir="false" afterPath="$PROJECT_DIR$/description.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagram.puml" beforeDir="false" afterPath="$PROJECT_DIR$/diagram.puml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/stats.db" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
