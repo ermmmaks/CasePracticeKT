@@ -49,9 +49,14 @@ class GameSession
             player.isCuffed = false
             player.isBuffed = false
 
-            repeat(8 - player.inventory.size) {
-                val randomItem = allPossibleItems.random()
-                player.addItem(randomItem)
+            val freeCell = 8 - player.inventory.size
+            val itemsToAdd = listOf(4, freeCell).minOrNull() ?: 0
+
+            if (itemsToAdd > 0) {
+                repeat(itemsToAdd) {
+                    val randomItem = allPossibleItems.random()
+                    player.addItem(randomItem)
+                }
             }
         }
 
