@@ -1,5 +1,3 @@
-import java.util.UUID
-
 enum class AmmoType
 {
     LIVE,
@@ -64,11 +62,3 @@ class Statistics
     val formattedWinRate: String
         get() = "${(calculateWinRate() * 100).toInt()}%"
 }
-
-data class MatchHistory
-(
-    val matchId: UUID,
-    val winnerId : UUID,
-    val losersId: List<UUID>,
-    val timestamp: Long = System.currentTimeMillis(),
-)

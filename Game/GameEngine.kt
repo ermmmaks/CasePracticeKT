@@ -3,7 +3,7 @@ interface GameContext
     fun peekNextAmmo(): AmmoType?
     fun ejectAmmo(): AmmoType
     fun healActivePlayer()
-    fun doubleNextDamage()
+    fun upNextDamage()
     fun skipOpponent(target: Player)
     fun getPhoneCall()
     fun invertCurrentAmmo()
@@ -14,24 +14,21 @@ class GameSession
 (
     private val players: List<Player>,
 ) : GameContext {
-
-    val id: java.util.UUID = java.util.UUID.randomUUID()
     
     private val shotgun = Shotgun()
     private var currentPlayerIdx: Int = 0
-    private var damageMultiplier: Int = 1
+    private var damageMultiplier: Int = DAMAGE_MULTIPLIER
     
     var onEvent: ((GameEvent) -> Unit)? = null
 
     var status: SessionStatus = SessionStatus.LOADING
         private set
 
-    //SSTTARRTT RROOUUNNDD
     fun startRound(live: Int? = null, blank: Int? = null) {
         status = SessionStatus.DISTRIBUTION
 
-        val finalLive = live ?: (1..4).random()
-        val finalBlank = blank ?: (1..4).random()
+        val finalLive = live ?: (MIN_BULLETS_PER_ROUND..MAX_BULLETS_PER_ROUND).random()
+        val finalBlank = blank ?: (MIN_BULLETS_PER_ROUND..MAX_BULLETS_PER_ROUND).random()
 
         shotgun.load(finalLive, finalBlank)
 
@@ -49,8 +46,8 @@ class GameSession
             player.isCuffed = false
             player.isBuffed = false
 
-            val freeCell = 8 - player.inventory.size
-            val itemsToAdd = listOf(4, freeCell).minOrNull() ?: 0
+            val freeCell = MAX_INVENTORY_SIZE - player.inventory.size
+            val itemsToAdd = listOf(ITEMS_DISTRIBUTION_PER_ROUND, freeCell).minOrNull() ?: 0
 
             if (itemsToAdd > 0) {
                 repeat(itemsToAdd) {
@@ -67,7 +64,6 @@ class GameSession
         onEvent?.invoke(GameEvent.TurnChanged(firstPlayer.name))
     }
 
-    // SSHHOOTT
     fun shot(target: Player)
     {
         if (status != SessionStatus.PLAYER_TURN || shotgun.isEmpty()) {
@@ -77,7 +73,7 @@ class GameSession
 
         val ammo = shotgun.fire()
         val damageResult = if (ammo == AmmoType.LIVE) {
-            1 * damageMultiplier
+            BASIC_DAMAGE * damageMultiplier
         } else {
             0
         }
@@ -92,7 +88,7 @@ class GameSession
             )
         )
 
-        damageMultiplier = 1
+        damageMultiplier = DAMAGE_MULTIPLIER
 
         checkGameCondition()
 
@@ -109,7 +105,6 @@ class GameSession
         }
     }
 
-    // NNEEXXTT TTUURRNN
     private fun nextTurn()
     {
         var nextIdx = (currentPlayerIdx + 1) % players.size
@@ -138,7 +133,6 @@ class GameSession
         onEvent?.invoke(GameEvent.TurnChanged(activePlayer.name))
     }
 
-    // CCOONNDDIITTIIOONN
     private fun checkGameCondition()
     {
         val activePlayers = players.filter { it.health > 0 }
@@ -151,11 +145,11 @@ class GameSession
 
         if (shotgun.isEmpty()) {
             onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
-            startRound(live = (1..4).random(), blank = (1..4).random())
+            startRound(live = (MIN_BULLETS_PER_ROUND..MAX_BULLETS_PER_ROUND).random(),
+                blank = (MIN_BULLETS_PER_ROUND..MAX_BULLETS_PER_ROUND).random())
         }
     }
 
-    // EFFECTS
     override fun peekNextAmmo(): AmmoType?
     {
         return shotgun.peek()
@@ -182,9 +176,9 @@ class GameSession
         players[currentPlayerIdx].heal()
     }    
 
-    override fun doubleNextDamage()
+    override fun upNextDamage()
     {
-        damageMultiplier = 2
+        damageMultiplier = DAMAGE_MULTIPLIER
     }
 
     override fun skipOpponent(target: Player)
@@ -215,7 +209,7 @@ class GameSession
     override fun invertCurrentAmmo()
     {
         shotgun.invertCurrentAmmo()
-        onEvent?.invoke(GameEvent.ActionLog("reverse!"))
+        onEvent?.invoke(GameEvent.ActionLog("Reverse!"))
     }
 
     override fun sendInfo(message: String)

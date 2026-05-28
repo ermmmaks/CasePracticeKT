@@ -10,7 +10,7 @@ class AppLauncher
 
     fun startNewGame()
     {
-        println("Count of players is (2-4): ")
+        println("Count of players is ($MIN_PLAYERS_COUNT - $MAX_PLAYERS_COUNT): ")
 
         if (!scanner.hasNextInt()) {
             println("Write a number!!!")
@@ -19,13 +19,13 @@ class AppLauncher
 
         val playerCount = scanner.nextInt()
 
-        if (playerCount !in 2..4) {
-            println("Maximum is 4 players. Kill unnecessary bug of bones")
+        if (playerCount !in MIN_PLAYERS_COUNT..MAX_PLAYERS_COUNT) {
+            println("Maximum is $MAX_PLAYERS_COUNT, minimum is $MIN_PLAYERS_COUNT players. Kill unnecessary bug of bones")
             return
         }
 
         players = List(playerCount) { i ->
-            Player(name = "Player ${i + 1}", initialHealth = 4)
+            Player(name = "Player ${i + 1}", initialHealth = PLAYER_HEALTH)
         }
 
         val session = GameSession(players)
@@ -39,7 +39,6 @@ class AppLauncher
 
         session.startRound(live = null, blank = null)
 
-        // CCYYCCLLEE
         while (session.status != SessionStatus.GAME_OVER) {
             val currentPlayer = activePlayer ?: players[0]
 

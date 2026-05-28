@@ -1,5 +1,3 @@
-import java.util.UUID
-
 interface Item
 {
     val name: String
@@ -15,7 +13,7 @@ object GameItems {
     val Handsaw = object : Item {
         override val name = "Handsaw"
         override fun applyEffect(context: GameContext, user: Player, target: Player?) {
-            context.doubleNextDamage()
+            context.upNextDamage()
         }
     }
 
@@ -131,7 +129,6 @@ class Shotgun
 
 class Player
 (
-    val id: UUID = UUID.randomUUID(),
     val name: String,
     initialHealth: Int,
 ) {
@@ -149,13 +146,13 @@ class Player
     }
 
     fun heal() {
-        val nextHealth = health + 1
-        health = if (nextHealth > 4) 4 else nextHealth
+        val nextHealth = health + HEAL_VALUE
+        health = if (nextHealth > PLAYER_HEALTH) PLAYER_HEALTH else nextHealth
     }
 
     fun addItem(item: Item): Boolean
     {
-        if (inventory.size >= 8) {
+        if (inventory.size >= MAX_INVENTORY_SIZE) {
             return false
         }
 

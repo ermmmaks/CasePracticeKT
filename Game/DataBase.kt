@@ -19,7 +19,7 @@ object PlayersTable : Table("players") {
 
 object MatchHistoryTable : Table("match_history") {
     val matchId = uuid("match_id")
-    val winnerName = varchar("winner_name", 50)
+    val winnerName = varchar("winner_name", 10)
     val timestamp = long("timestamp")
     override val primaryKey = PrimaryKey(matchId)
 }
