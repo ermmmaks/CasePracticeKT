@@ -5,13 +5,11 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Game/GameConfig.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/AppLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/AppLauncher.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/DataBase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/DataBase.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEngine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEngine.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEntities.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEntities.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/Models.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/Models.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/MainUI.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/description.md" beforeDir="false" afterPath="$PROJECT_DIR$/description.md" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/stats.db" beforeDir="false" afterPath="$PROJECT_DIR$/stats.db" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />

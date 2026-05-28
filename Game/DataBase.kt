@@ -24,23 +24,33 @@ object MatchHistoryTable : Table("match_history") {
     override val primaryKey = PrimaryKey(matchId)
 }
 
+object MatchParticipantsTable : Table("match_participants") {
+    val matchId = uuid("match_id")
+    val participantName = varchar("participant_name", 10)
+    override val primaryKey = PrimaryKey(matchId, participantName)
+}
+
 class StatisticsService(
     dbUrl: String = "jdbc:sqlite:./stats.db"
 ) {
     init {
         Database.connect(dbUrl, "org.sqlite.JDBC")
         transaction {
-            SchemaUtils.createMissingTablesAndColumns(PlayersTable, MatchHistoryTable)
+            SchemaUtils.createMissingTablesAndColumns(PlayersTable, MatchHistoryTable, MatchParticipantsTable)
         }
     }
 
     private fun ensurePlayerExists(playerName: String) {
-        val exists = PlayersTable.selectAll().where { PlayersTable.name eq playerName }.any()
+        val exists = transaction {
+            PlayersTable.selectAll().where { PlayersTable.name eq playerName }.any()
+        }
         if (!exists) {
-            PlayersTable.insert {
-                it[name] = playerName
-                it[wins] = 0
-                it[totalGames] = 0
+            transaction {
+                PlayersTable.insert {
+                    it[name] = playerName
+                    it[wins] = 0
+                    it[totalGames] = 0
+                }
             }
         }
     }
@@ -55,23 +65,43 @@ class StatisticsService(
     }
 
     fun updateStats(winnerName: String, participants: List<String>) = transaction {
+        val matchId = UUID.randomUUID()
+
+        // Сохраняем матч
         MatchHistoryTable.insert {
-            it[matchId] = UUID.randomUUID()
+            it[MatchHistoryTable.matchId] = matchId
             it[MatchHistoryTable.winnerName] = winnerName
             it[timestamp] = System.currentTimeMillis()
         }
 
+        // Сохраняем участников
+        participants.forEach { participantName ->
+            ensurePlayerExists(participantName)
+            MatchParticipantsTable.insert {
+                it[MatchParticipantsTable.matchId] = matchId
+                it[MatchParticipantsTable.participantName] = participantName
+            }
+        }
+
+        // Обновляем статистику - ИСПРАВЛЕННЫЙ ВАРИАНТ
         participants.forEach { pName ->
-            ensurePlayerExists(pName)
+            // Получаем текущие значения
+            val currentStats = PlayersTable
+                .selectAll()
+                .where { PlayersTable.name eq pName }
+                .single()
 
+            val newTotalGames = currentStats[PlayersTable.totalGames] + 1
+            val newWins = if (pName == winnerName) {
+                currentStats[PlayersTable.wins] + 1
+            } else {
+                currentStats[PlayersTable.wins]
+            }
+
+            // Обновляем записи
             PlayersTable.update({ PlayersTable.name eq pName }) {
-                with(SqlExpressionBuilder) {
-                    it[totalGames] = PlayersTable.totalGames + 1
-
-                    if (pName == winnerName) {
-                        it[wins] = PlayersTable.wins + 1
-                    }
-                }
+                it[totalGames] = newTotalGames
+                it[wins] = newWins
             }
         }
     }
@@ -84,19 +114,24 @@ class StatisticsService(
 
     fun getMatchHistory(): List<MatchLog> = transaction {
         val totalCount = MatchHistoryTable.selectAll().count().toInt()
-        val allPlayers = PlayersTable.selectAll().map { row -> row[PlayersTable.name] }
 
         MatchHistoryTable.selectAll()
             .orderBy(MatchHistoryTable.timestamp to SortOrder.DESC)
-            .mapIndexed { index, it ->
-                val matchParticipants = if (allPlayers.contains(it[MatchHistoryTable.winnerName])) allPlayers else listOf(it[MatchHistoryTable.winnerName])
+            .mapIndexed { index, matchRow ->
+                val matchId = matchRow[MatchHistoryTable.matchId]
+
+                val participants = MatchParticipantsTable
+                    .select(MatchParticipantsTable.participantName)
+                    .where { MatchParticipantsTable.matchId eq matchId }
+                    .map { it[MatchParticipantsTable.participantName] }
+                    .sorted()
 
                 MatchLog(
-                    matchId = it[MatchHistoryTable.matchId],
-                    winnerName = it[MatchHistoryTable.winnerName],
-                    timestamp = it[MatchHistoryTable.timestamp],
+                    matchId = matchId,
+                    winnerName = matchRow[MatchHistoryTable.winnerName],
+                    timestamp = matchRow[MatchHistoryTable.timestamp],
                     gameNumber = totalCount - index,
-                    participants = matchParticipants
+                    participants = participants
                 )
             }
     }
