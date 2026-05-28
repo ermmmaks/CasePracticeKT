@@ -1,16 +1,7 @@
-package game
+package game.engine
 
-interface GameContext
-{
-    fun peekNextAmmo(): AmmoType?
-    fun ejectAmmo(): AmmoType
-    fun healActivePlayer()
-    fun upNextDamage()
-    fun skipOpponent(target: Player)
-    fun getPhoneCall()
-    fun invertCurrentAmmo()
-    fun sendInfo(message: String)
-}
+import game.models.*
+import game.entities.*
 
 class GameSession
     (
@@ -19,7 +10,7 @@ class GameSession
 
     private val shotgun = Shotgun()
     private var currentPlayerIdx: Int = 0
-    private var damageMultiplier: Int = DAMAGE_MULTIPLIER
+    private var damageMultiplier: Int = 1
 
     var onEvent: ((GameEvent) -> Unit)? = null
 
@@ -87,11 +78,10 @@ class GameSession
             )
         )
 
-        damageMultiplier = DAMAGE_MULTIPLIER
+        damageMultiplier = 1
 
         if (checkGameCondition()) return
 
-        // Если патроны кончились после выстрела
         if (shotgun.isEmpty()) {
             onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
             onEvent?.invoke(GameEvent.RoundEnded)
@@ -167,7 +157,7 @@ class GameSession
     }
 
     override fun upNextDamage() {
-        damageMultiplier = DAMAGE_MULTIPLIER * BASIC_DAMAGE
+        damageMultiplier = DAMAGE_MULTIPLIER
     }
 
     override fun skipOpponent(target: Player) {

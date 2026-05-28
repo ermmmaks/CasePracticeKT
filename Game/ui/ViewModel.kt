@@ -1,6 +1,10 @@
-package game
+package game.ui
 
 import androidx.compose.runtime.*
+import game.models.GameEvent
+import game.engine.GameSession
+import game.entities.Item
+import game.entities.Player
 
 data class PlayerUiState(
     val name: String,

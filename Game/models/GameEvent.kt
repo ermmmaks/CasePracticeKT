@@ -1,18 +1,4 @@
-package game
-
-enum class AmmoType
-{
-    LIVE,
-    BLANK
-}
-
-enum class SessionStatus
-{
-    LOADING,
-    DISTRIBUTION,
-    PLAYER_TURN,
-    GAME_OVER
-}
+package game.models
 
 sealed class GameEvent
 {
@@ -47,22 +33,4 @@ sealed class GameEvent
     data object RoundEnded : GameEvent()
 
     data object GameOver : GameEvent()
-}
-
-class Statistics 
-(   
-    var wins: Int = 0,
-    var totalGames: Int = 0
-) {
-    fun calculateWinRate(): Double
-    {
-        if (totalGames == 0) {
-            return 0.0
-        }
-
-        val rate = wins.toDouble() / totalGames
-        return rate
-    }
-    val formattedWinRate: String
-        get() = "${(calculateWinRate() * 100).toInt()}%"
 }

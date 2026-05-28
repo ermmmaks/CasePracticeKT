@@ -1,5 +1,11 @@
 package game
 
+import game.data.*
+import game.engine.*
+import game.entities.*
+import game.models.*
+import game.ui.*
+
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 

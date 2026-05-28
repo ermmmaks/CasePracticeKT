@@ -19,7 +19,7 @@ interface Item {
     + applyEffect(context: GameContext, user: Player, target: Player? = null)
 }
 
-' --- Presentation & Navigation Layer (UI & VM) ---
+' --- Presentation & Navigation Layer (ui & VM) ---
 
 class GameLauncher {
     + main(args: Array<String>)
@@ -42,7 +42,7 @@ class ViewModel {
     + handlePlayerClick(clickedPlayerUi: PlayerUiState)
 }
 
-' --- Domain Logic Layer (Core Engine) ---
+' --- Domain Logic Layer (Core engine) ---
 
 class AppLauncher << (C,#FF7700) Console Entry >> {
     + main(args: Array<String>)
@@ -81,7 +81,7 @@ class Player {
     + addItem(item: Item): Boolean
 }
 
-' --- Data Access Layer (Exposed ORM & SQLite) ---
+' --- data Access Layer (Exposed ORM & SQLite) ---
 
 class StatisticsService {
     + getOrCreateStats(playerName: String): Statistics

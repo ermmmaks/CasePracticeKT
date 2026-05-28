@@ -1,5 +1,13 @@
 package game
 
+import game.engine.GameSession
+import game.entities.Player
+import game.models.AmmoType
+import game.models.GameEvent
+import game.models.MAX_PLAYERS_COUNT
+import game.models.MIN_PLAYERS_COUNT
+import game.models.PLAYER_HEALTH
+import game.models.SessionStatus
 import java.util.Scanner
 
 class AppLauncher
@@ -12,7 +20,7 @@ class AppLauncher
 
     fun startNewGame()
     {
-        println("Count of players is ($MIN_PLAYERS_COUNT - $MAX_PLAYERS_COUNT): ")
+        println("Count of players is (${MIN_PLAYERS_COUNT} - ${MAX_PLAYERS_COUNT}): ")
 
         if (!scanner.hasNextInt()) {
             println("Write a number!!!")
@@ -22,7 +30,7 @@ class AppLauncher
         val playerCount = scanner.nextInt()
 
         if (playerCount !in MIN_PLAYERS_COUNT..MAX_PLAYERS_COUNT) {
-            println("Maximum is $MAX_PLAYERS_COUNT, minimum is $MIN_PLAYERS_COUNT players. Kill unnecessary bug of bones")
+            println("Maximum is ${MAX_PLAYERS_COUNT}, minimum is $MIN_PLAYERS_COUNT players. Kill unnecessary bug of bones")
             return
         }
 

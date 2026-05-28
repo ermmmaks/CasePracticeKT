@@ -5,17 +5,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Game/engine/GameContext.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Game/entities/GameItems.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Game/entities/Item.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Game/entities/Player.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Game/entities/Shotgun.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Game/models/AmmoType.kt" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/Game/models/Statistics.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/AppLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/AppLauncher.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/DataBase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/DataBase.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameConfig.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEngine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEngine.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEntities.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEntities.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/DataBase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/data/DataBase.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/GameConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/models/GameConfig.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/GameEngine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameSession.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/GameEntities.kt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/GameLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameLauncher.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/MainUI.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/Models.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/Models.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/MainUI.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/Models.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/models/GameEvent.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/ViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/description.md" beforeDir="false" afterPath="$PROJECT_DIR$/description.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagram.puml" beforeDir="false" afterPath="$PROJECT_DIR$/diagram.puml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/DBSpecification.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/DBSpecification.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/GameSessionTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/GameSessionTest.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/ItemsTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/ItemsTest.kt" afterDir="false" />
@@ -53,6 +62,7 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin File" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>

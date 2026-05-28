@@ -1,5 +1,6 @@
-package game
+package game.data
 
+import game.models.Statistics
 import org.jetbrains.exposed.sql.*
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.util.UUID
@@ -111,7 +112,11 @@ class StatisticsService(
     fun getLeaderboard(): List<Pair<String, Statistics>> = transaction {
         PlayersTable.selectAll()
             .orderBy(PlayersTable.wins to SortOrder.DESC)
-            .map { it[PlayersTable.name] to Statistics(it[PlayersTable.wins], it[PlayersTable.totalGames]) }
+            .map { it[PlayersTable.name] to Statistics(
+                it[PlayersTable.wins],
+                it[PlayersTable.totalGames]
+            )
+            }
     }
 
     fun getMatchHistory(): List<MatchLog> = transaction {

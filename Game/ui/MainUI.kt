@@ -1,4 +1,4 @@
-package game
+package game.ui
 
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
@@ -18,6 +18,16 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.text.TextStyle
+import game.models.GameEvent
+import game.engine.GameSession
+import game.entities.Item
+import game.models.MAX_INVENTORY_SIZE
+import game.models.MAX_PLAYERS_COUNT
+import game.models.MIN_PLAYERS_COUNT
+import game.models.PLAYER_HEALTH
+import game.entities.Player
+import game.data.StatisticsService
 import kotlin.system.exitProcess
 import java.util.Date
 import java.text.SimpleDateFormat
@@ -178,7 +188,7 @@ fun TerminalTextField(
         value = value,
         onValueChange = onValueChange,
         isError = isError,
-        textStyle = androidx.compose.ui.text.TextStyle(
+        textStyle = TextStyle(
             color = if (isError) GameTheme.rustRed else GameTheme.terminalGreen,
             fontFamily = GameTheme.terminalFont,
             fontSize = 18.sp
