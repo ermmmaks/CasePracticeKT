@@ -1,3 +1,5 @@
+package game
+
 import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
@@ -10,7 +12,9 @@ class GameItemsTest
     @BeforeEach
     fun setup()
     {
-        players = listOf(Player(name = "P1", initialHealth = 4), Player(name = "P2", initialHealth = 4))
+        players = List(MIN_PLAYERS_COUNT) { i ->
+            Player(name = "P${i + 1}", initialHealth = PLAYER_HEALTH)
+        }
         session = GameSession(players)
     }
 
@@ -18,27 +22,33 @@ class GameItemsTest
     fun `test magnifier effect`()
     {
         session.startRound(1, 0)
-        // Предмет не должен падать, даже если мы просто проверяем логи
+        assertEquals(AmmoType.LIVE, session.peekNextAmmo())
         GameItems.Magnifier.applyEffect(session, players[0])
     }
 
     @Test
     fun `test cigarette heal`()
     {
-        players[0].takeDamage(2)
+        players[0].takeDamage(BASIC_DAMAGE)
+        val healthBeforeHeal = players[0].health
+
         GameItems.Cigarette.applyEffect(session, players[0])
-        assertEquals(3, players[0].health)
+
+        assertEquals(healthBeforeHeal + HEAL_VALUE, players[0].health)
     }
 
     @Test
     fun `test beer ejects ammo`()
     {
         session.startRound(1, 0)
-        players[0].inventory.clear()
+
+        assertEquals(AmmoType.LIVE, session.peekNextAmmo())
+
         GameItems.Beer.applyEffect(session, players[0], null)
-        assertEquals(8, players[0].inventory.size)
-        assertNotNull(session.peekNextAmmo())
+
+        assertNull(session.peekNextAmmo(), "Дробовик должен быть пуст!")
     }
+
 
     @Test
     fun `test handcuffs apply status`()
@@ -51,15 +61,19 @@ class GameItemsTest
     fun `test handsaw effect`()
     {
         session.startRound(1, 0)
+
+        val initialHealth = players[1].health
         GameItems.Handsaw.applyEffect(session, players[0])
         session.shot(players[1])
-        assertEquals(2, players[1].health) // 4 - (1 * 2) = 2
+
+        val expectedDamage = BASIC_DAMAGE * DAMAGE_MULTIPLIER
+        assertEquals(initialHealth - expectedDamage, players[1].health)
     }
 
     @Test
     fun `test inverter effect`()
     {
-        session.startRound(1, 0) // LIVE
+        session.startRound(1, 0)
         GameItems.Inverter.applyEffect(session, players[0])
         assertEquals(AmmoType.BLANK, session.peekNextAmmo())
     }

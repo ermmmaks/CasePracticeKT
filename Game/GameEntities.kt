@@ -1,3 +1,5 @@
+package game
+
 interface Item
 {
     val name: String

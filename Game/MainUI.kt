@@ -1,3 +1,5 @@
+package game
+
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
@@ -80,11 +82,11 @@ fun Modifier.terminalCardBorder(isAlive: Boolean, isSelected: Boolean): Modifier
 
 fun List<String>.deduplicateConsecutive(): List<String> {
     return buildList {
-        var last: String? = null
-        this@deduplicateConsecutive.forEach { current ->
-            if (last != current) {
+        var previous: String? = null
+        for (current in this@deduplicateConsecutive) {
+            if (previous != current) {
                 add(current)
-                last = current
+                previous = current
             }
         }
     }.takeLast(5)
@@ -197,7 +199,7 @@ fun TerminalTextField(
 }
 
 @Composable
-fun Health(health: Int, maxHealth: Int = 4) {
+fun Health(health: Int, maxHealth: Int = PLAYER_HEALTH) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         modifier = Modifier
@@ -225,8 +227,10 @@ fun InventoryGrid(
     clickOnItem: (Item) -> Unit
 ) {
     val allItemsState = rememberUpdatedState(inventory)
+    val rows = MAX_INVENTORY_SIZE / 4
+
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
-        repeat(2) { rowIndex ->
+        repeat(rows) { rowIndex ->
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 repeat(4) { colIndex ->
                     val itemIdx = rowIndex * 4 + colIndex
@@ -299,7 +303,7 @@ fun PlayerCard(
         )
 
         Spacer(modifier = Modifier.height(12.dp))
-        Health(health = player.health)
+        Health(health = player.health, maxHealth = PLAYER_HEALTH)
         Spacer(modifier = Modifier.height(16.dp))
 
         if (player.isAlive) {
@@ -366,7 +370,7 @@ fun ShotgunView(
                 drawRect(color = Color.Black, topLeft = topLeft, size = size, style = Stroke(width = strokeWidth))
             }
 
-            // Stock - инлайним stockWidth
+            // Stock
             val stockHeight = 24.dp.toPx() * scaleY
             val stockY = (size.height - stockHeight) / 2
             drawOutlinedRect(
@@ -375,7 +379,7 @@ fun ShotgunView(
                 Size(85.dp.toPx() * scaleX, stockHeight)
             )
 
-            // Grip - инлайним gripX
+            // Grip
             val gripWidth = 45.dp.toPx() * scaleX
             val gripHeight = 20.dp.toPx() * scaleY
             drawOutlinedRect(
@@ -446,13 +450,16 @@ fun SelectionScreen(
             fontWeight = FontWeight.ExtraBold
         )
         Spacer(Modifier.height(40.dp))
+
+        // ДИНАМИЧЕСКАЯ ОТРИСОВКА КНОПОК от MIN до MAX
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            for (playersCount in 2..4) {
+            for (playersCount in MIN_PLAYERS_COUNT..MAX_PLAYERS_COUNT) {
                 TerminalButton(
                     text = "$playersCount PLAYERS",
-                    onClick = { onSelected(playersCount) })
+                    onClick = { onSelected(playersCount) }
+                )
             }
         }
         Spacer(Modifier.height(32.dp))
@@ -1029,7 +1036,7 @@ fun MainAppContainer() {
                         onLogin = { name ->
                             dbService.getOrCreateStats(name)
                             playerNames.add(name)
-                            loggedInPlayers.add(Player(name = name, initialHealth = 4))
+                            loggedInPlayers.add(Player(name = name, initialHealth = PLAYER_HEALTH))
                         },
                         onBack = {
                             if (loggedInPlayers.isNotEmpty()) {
@@ -1049,7 +1056,7 @@ fun MainAppContainer() {
                 var rematchTrigger by remember { mutableStateOf(0) }
 
                 val currentPlayers = remember(rematchTrigger) {
-                    playerNames.map { Player(name = it, initialHealth = 4) }
+                    playerNames.map { Player(name = it, initialHealth = PLAYER_HEALTH) }
                 }
                 val session = remember(rematchTrigger) { GameSession(currentPlayers) }
                 val viewModel = remember(rematchTrigger) { ViewModel(session, currentPlayers) }

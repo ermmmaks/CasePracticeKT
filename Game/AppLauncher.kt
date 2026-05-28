@@ -1,3 +1,5 @@
+package game
+
 import java.util.Scanner
 
 class AppLauncher
@@ -102,6 +104,10 @@ class AppLauncher
 
             is GameEvent.ActionLog -> {
                 println("Log: ${event.text}")
+            }
+
+            is GameEvent.RoundEnded -> {
+                currentSession?.startRound()
             }
 
             is GameEvent.GameOver -> {

@@ -1,3 +1,5 @@
+package game
+
 import androidx.compose.runtime.*
 
 data class PlayerUiState(
@@ -51,6 +53,11 @@ class ViewModel(
             }
             is GameEvent.InfoMessage -> {
                 uiState = uiState.copy(infoMessage = event.text)
+            }
+
+            is GameEvent.RoundEnded -> {
+               uiState = uiState.copy(isShotgunSawedOff = false)
+                refreshPlayers()
             }
 
             is GameEvent.GameOver -> {

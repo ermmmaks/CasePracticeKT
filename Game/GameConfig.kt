@@ -1,3 +1,5 @@
+package game
+
 const val MIN_PLAYERS_COUNT = 2
 const val MAX_PLAYERS_COUNT = 4
 const val PLAYER_HEALTH = 4

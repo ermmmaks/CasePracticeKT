@@ -1,3 +1,5 @@
+package game
+
 enum class AmmoType
 {
     LIVE,
@@ -42,7 +44,9 @@ sealed class GameEvent
         val newActivePlayerName: String,
     ) : GameEvent()
 
-    object GameOver : GameEvent()
+    data object RoundEnded : GameEvent()
+
+    data object GameOver : GameEvent()
 }
 
 class Statistics 
