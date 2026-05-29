@@ -5,9 +5,18 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/Game/engine/GameSessionResult.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/AppLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/AppLauncher.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/engine/GameContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameContext.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/engine/GameSession.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameSession.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/entities/GameItems.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/GameItems.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/entities/Items.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/Items.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/models/GameEvent.kt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/models/SessionStateData.kt" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/ui/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/MainUI.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/ui/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/ViewModel.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -40,9 +49,9 @@
     <option name="RECENT_TEMPLATES">
       <list>
         <option value="Kotlin File" />
-        <option value="Kotlin Class" />
         <option value="Interface" />
         <option value="Kotlin Interface" />
+        <option value="Kotlin Class" />
       </list>
     </option>
   </component>

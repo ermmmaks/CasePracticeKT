@@ -8,14 +8,12 @@ class GameSession(
 ) : GameContext {
     override val shotgun = Shotgun()
     override var damageMultiplier: Int = 1
-    override var onEvent: ((GameEvent) -> Unit)? = null
 
     private var currentPlayerIdx: Int = 0
-
     var status: SessionStatus = SessionStatus.LOADING
         private set
 
-    fun startRound(live: Int? = null, blank: Int? = null) {
+    fun startRound(live: Int? = null, blank: Int? = null): RoundStartResult {
         status = SessionStatus.DISTRIBUTION
 
         val finalLive = live ?: (MIN_BULLETS_PER_ROUND..MAX_BULLETS_PER_ROUND).random()
@@ -49,14 +47,17 @@ class GameSession(
         status = SessionStatus.PLAYER_TURN
 
         val firstPlayer = players[currentPlayerIdx]
-        onEvent?.invoke(GameEvent.ActionLog("$finalLive LIVE, $finalBlank BLANK. SOMEONE WILL BE HURT"))
-        onEvent?.invoke(GameEvent.TurnChanged(firstPlayer.name))
+
+        return RoundStartResult(
+            liveCount = finalLive,
+            blankCount = finalBlank,
+            firstPlayerName = firstPlayer.name
+        )
     }
 
-    fun shot(target: Player) {
+    fun shot(target: Player): ShotResult {
         if (status != SessionStatus.PLAYER_TURN || shotgun.isEmpty()) {
-            checkGameCondition()
-            return
+            return ShotResult.Empty
         }
 
         val ammo = shotgun.fire()
@@ -68,75 +69,100 @@ class GameSession(
 
         target.takeDamage(damageResult)
 
-        onEvent?.invoke(
-            GameEvent.ShotFired(
-                type = ammo,
-                targetName = target.name,
-                damage = damageResult
-            )
-        )
-
         damageMultiplier = 1
 
-        if (checkGameCondition()) return
+        val isGameOver = checkGameCondition()
+        if (isGameOver) {
+            status = SessionStatus.GAME_OVER
+            return ShotResult.GameOver(ammo, target.name, damageResult)
+        }
 
         if (shotgun.isEmpty()) {
-            onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
-            onEvent?.invoke(GameEvent.RoundEnded)
-            startRound()
-            return
+            return ShotResult.RoundEnded(ammo, target.name, damageResult)
         }
 
         val shotSelfWithBlank = (target == players[currentPlayerIdx])
         val isBlank = (ammo == AmmoType.BLANK)
 
         if (shotSelfWithBlank && isBlank) {
-            onEvent?.invoke(GameEvent.ActionLog("${target.name} is lucky bastard"))
-            onEvent?.invoke(GameEvent.TurnChanged(players[currentPlayerIdx].name))
+            return ShotResult.SelfBlank(ammo, target.name, damageResult)
         } else {
-            nextTurn()
+            val nextPlayer = nextTurn()
+            return ShotResult.TurnEnded(ammo, target.name, damageResult, nextPlayer)
         }
     }
 
-    fun useItem(player: Player, item: Item) {
-        if (!validateUser(player)) return
-
-        if (player.removeItem(item)) {
-            item.applyEffect(this, player)
-            onEvent?.invoke(GameEvent.ItemUsed(player.name, item.name))
-            checkPostItemCondition()
+    fun useItem(player: Player, item: Item): UseItemResult {
+        if (!validateUser(player)) {
+            return UseItemResult.InvalidUser
         }
+
+        if (!player.removeItem(item)) {
+            return UseItemResult.ItemNotFound
+        }
+
+        val effectResult = item.applyEffect(this, player)
+
+        val isGameOver = checkGameCondition()
+        if (isGameOver) {
+            status = SessionStatus.GAME_OVER
+            return UseItemResult.GameOver(item.name, effectResult)
+        }
+
+        if (shotgun.isEmpty()) {
+            return UseItemResult.RoundEnded(item.name, effectResult)
+        }
+
+        return UseItemResult.Success(item.name, effectResult)
     }
 
-    fun useItem(player: Player, item: TargetItem, target: Player) {
-        if (!validateUser(player)) return
+    fun useItem(player: Player, item: TargetItem, target: Player): UseItemResult {
+        if (!validateUser(player)) {
+            return UseItemResult.InvalidUser
+        }
 
-        if (player.removeItem(item)) {
-            item.applyEffect(this, player, target)
-            onEvent?.invoke(GameEvent.ItemUsed(player.name, item.name))
-            checkPostItemCondition()
+        if (!player.removeItem(item)) {
+            return UseItemResult.ItemNotFound
+        }
+
+        val effectResult = item.applyEffect(this, player, target)
+
+        val isGameOver = checkGameCondition()
+        if (isGameOver) {
+            status = SessionStatus.GAME_OVER
+            return UseItemResult.GameOver(item.name, effectResult)
+        }
+
+        if (shotgun.isEmpty()) {
+            return UseItemResult.RoundEnded(item.name, effectResult)
+        }
+
+        return UseItemResult.Success(item.name, effectResult)
+    }
+
+    fun getCurrentPlayer(): Player? {
+        return players.getOrNull(currentPlayerIdx)?.takeIf { it.health > 0 }
+    }
+
+    fun getWinner(): Player? {
+        return players.find { it.health > 0 }
+    }
+
+    fun getPlayersCopy(): List<Player> {
+        return players.map { player ->
+            Player(player.name, player.health).apply {
+                isCuffed = player.isCuffed
+                isBuffed = player.isBuffed
+                inventory.addAll(player.inventory)
+            }
         }
     }
 
     private fun validateUser(player: Player): Boolean {
-        if (player != players[currentPlayerIdx]) return false
-        if (player.health <= 0) {
-            onEvent?.invoke(GameEvent.InfoMessage("Dead men tell no tales... and use no items"))
-            return false
-        }
-        return true
+        return player == players[currentPlayerIdx] && player.health > 0
     }
 
-    private fun checkPostItemCondition() {
-        if (checkGameCondition()) return
-        if (shotgun.isEmpty()) {
-            onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
-            onEvent?.invoke(GameEvent.RoundEnded)
-            startRound()
-        }
-    }
-
-    private fun nextTurn() {
+    private fun nextTurn(): String {
         var nextIdx = (currentPlayerIdx + 1) % players.size
 
         while (players[nextIdx].health <= 0) {
@@ -145,27 +171,17 @@ class GameSession(
         }
 
         if (players[nextIdx].isCuffed) {
-            val skippedPlayer = players[nextIdx]
-            skippedPlayer.isCuffed = false
-            onEvent?.invoke(GameEvent.ActionLog("${skippedPlayer.name} skipped turn"))
+            players[nextIdx].isCuffed = false
             currentPlayerIdx = nextIdx
-            nextTurn()
-            return
+            return nextTurn()
         }
 
         currentPlayerIdx = nextIdx
-        val activePlayer = players[currentPlayerIdx]
-        onEvent?.invoke(GameEvent.TurnChanged(activePlayer.name))
+        return players[currentPlayerIdx].name
     }
 
     private fun checkGameCondition(): Boolean {
         val activePlayers = players.filter { it.health > 0 }
-
-        if (activePlayers.size <= 1) {
-            status = SessionStatus.GAME_OVER
-            onEvent?.invoke(GameEvent.GameOver)
-            return true
-        }
-        return false
+        return activePlayers.size <= 1
     }
 }

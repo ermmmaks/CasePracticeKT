@@ -46,7 +46,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 
 compose.desktop {
     application {
-        mainClass = "GameLauncher"
+        mainClass = "game.GameLauncher"
 
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)

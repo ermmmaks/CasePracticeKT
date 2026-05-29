@@ -19,7 +19,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.text.TextStyle
-import game.models.GameEvent
 import game.engine.GameSession
 import game.entities.Item
 import game.entities.TargetItem
@@ -90,18 +89,6 @@ fun Modifier.terminalCardBorder(isAlive: Boolean, isSelected: Boolean): Modifier
         width = if (isSelected) 2.5.dp else 1.dp,
         color = GameTheme.getPlayerBorderColor(isAlive, isSelected)
     )
-
-fun List<String>.deduplicateConsecutive(): List<String> {
-    return buildList {
-        var previous: String? = null
-        for (current in this@deduplicateConsecutive) {
-            if (previous != current) {
-                add(current)
-                previous = current
-            }
-        }
-    }.takeLast(5)
-}
 
 // ==================== ПОЗИЦИОНИРОВАНИЕ ИГРОКОВ ====================
 
@@ -819,6 +806,8 @@ fun HistoryScreen(dbService: StatisticsService, onBack: () -> Unit) {
     }
 }
 
+// Только TableScreen и MainAppContainer изменены, остальные функции без изменений
+
 @Composable
 fun TableScreen(
     viewModel: ViewModel,
@@ -834,10 +823,8 @@ fun TableScreen(
         if (selectedPlayerForStats != null) dbService.getOrCreateStats(selectedPlayerForStats!!) else null
     }
 
-    val isMatchEnded = state.players.count { it.isAlive } == 1
-
     Box(modifier = Modifier.fillMaxSize()) {
-        if (isMatchEnded) {
+        if (state.isGameOver) {
             Column(
                 modifier = Modifier.align(Alignment.Center).zIndex(5f).border(2.dp, GameTheme.rustRed)
                     .background(Color.Black).padding(32.dp),
@@ -845,10 +832,10 @@ fun TableScreen(
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Text(
-                    "MATCH OVER // SYSTEM HALTED",
-                    color = GameTheme.rustRed,
+                    "MATCH OVER // ${state.players.find { it.isAlive }?.name?.uppercase() ?: "UNKNOWN"} WINS",
+                    color = GameTheme.terminalGreen,
                     fontFamily = GameTheme.terminalFont,
-                    fontSize = 24.sp,
+                    fontSize = 20.sp,
                     fontWeight = FontWeight.Black
                 )
                 Spacer(Modifier.height(8.dp))
@@ -892,11 +879,7 @@ fun TableScreen(
             )
             Spacer(Modifier.height(6.6.dp))
 
-            val filteredLogs = remember(state.logs) {
-                state.logs.deduplicateConsecutive()
-            }
-
-            filteredLogs.forEach { log ->
+            state.logs.takeLast(5).forEach { log ->
                 Text(
                     text = "> $log",
                     color = GameTheme.terminalGreen.copy(alpha = 0.8f),
@@ -907,10 +890,10 @@ fun TableScreen(
         }
 
         // Визуализация дробовика
-        if (!isMatchEnded) {
-            val targetRotation = when (state.targetPlayerIdx) {
-                null -> getRotationForPlayer(playerCount, state.activePlayerIdx)
-                else -> getRotationForPlayer(playerCount, state.targetPlayerIdx)
+        if (!state.isGameOver) {
+            val targetRotation = when (state.targetPlayerName) {
+                null -> getRotationForPlayer(playerCount, state.players.indexOfFirst { it.name == state.activePlayerName })
+                else -> getRotationForPlayer(playerCount, state.players.indexOfFirst { it.name == state.targetPlayerName })
             }
 
             Box(
@@ -925,26 +908,26 @@ fun TableScreen(
         // Карточки игроков
         state.players.forEachIndexed { index, player ->
             val alignment = getPlayerAlignment(playerCount, index)
-            val isSelected = (index == state.activePlayerIdx)
+            val isActive = (player.name == state.activePlayerName)
 
             PlayerCard(
                 player = player,
-                isLarge = isSelected,
+                isLarge = isActive,
                 viewModel = viewModel,
                 modifier = Modifier
                     .align(alignment)
                     .padding(all = 12.dp)
                     .clickable {
-                        if (isMatchEnded) {
+                        if (state.isGameOver) {
                             selectedPlayerForStats = player.name
                         } else {
-                            viewModel.handlePlayerClick(clickedPlayerUi = player)
+                            viewModel.selectTarget(player)
                         }
                     }
             )
         }
 
-        // Диалог со статистикой
+        // Диалог со статистикой (без изменений)
         if (selectedPlayerForStats != null && currentClickedStats != null) {
             Box(
                 modifier = Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.85f))
@@ -1085,24 +1068,11 @@ fun MainAppContainer() {
                     playerNames.map { Player(name = it, initialHealth = PLAYER_HEALTH) }
                 }
 
-                // Просто создаем пустую сессию БЕЗ вызова startRound()
                 val session = remember(rematchTrigger) { GameSession(currentPlayers) }
                 val viewModel = remember(rematchTrigger) { ViewModel(session) }
 
                 LaunchedEffect(rematchTrigger) {
-                    // Сначала привязываем слушатель событий, чтобы интерфейс поймал ActionLog и TurnChanged
-                    session.onEvent = { event ->
-                        if (event is GameEvent.GameOver) {
-                            val winner = currentPlayers.find { it.health > 0 }
-                            winner?.let {
-                                dbService.updateStats(it.name, currentPlayers.map { p -> p.name })
-                            }
-                        }
-                        viewModel.handleEvent(event)
-                    }
-
-                    // Только ТЕПЕРЬ безопасно запускаем первый раунд один раз
-                    session.startRound()
+                    viewModel.startGame()
                 }
 
                 TableScreen(
@@ -1115,7 +1085,6 @@ fun MainAppContainer() {
                         currentScreen = "menu"
                     },
                     onRematch = {
-                        session.onEvent = null
                         rematchTrigger++
                     }
                 )
