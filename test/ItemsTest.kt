@@ -26,7 +26,7 @@ class GameItemsTest
     fun `test magnifier effect`()
     {
         session.startRound(1, 0)
-        assertEquals(AmmoType.LIVE, session.peekNextAmmo())
+        assertEquals(AmmoType.LIVE, session.shotgun.peek())
         GameItems.Magnifier.applyEffect(session, players[0])
     }
 
@@ -46,13 +46,12 @@ class GameItemsTest
     {
         session.startRound(1, 0)
 
-        assertEquals(AmmoType.LIVE, session.peekNextAmmo())
+        assertEquals(AmmoType.LIVE, session.shotgun.peek())
 
-        GameItems.Beer.applyEffect(session, players[0], null)
+        GameItems.Beer.applyEffect(session, players[0])
 
-        assertNull(session.peekNextAmmo(), "Дробовик должен быть пуст!")
+        assertNull(session.shotgun.peek(), "Дробовик должен быть пуст!")
     }
-
 
     @Test
     fun `test handcuffs apply status`()
@@ -79,6 +78,6 @@ class GameItemsTest
     {
         session.startRound(1, 0)
         GameItems.Inverter.applyEffect(session, players[0])
-        assertEquals(AmmoType.BLANK, session.peekNextAmmo())
+        assertEquals(AmmoType.BLANK, session.shotgun.peek())
     }
 }

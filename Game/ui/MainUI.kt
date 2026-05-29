@@ -22,6 +22,7 @@ import androidx.compose.ui.text.TextStyle
 import game.models.GameEvent
 import game.engine.GameSession
 import game.entities.Item
+import game.entities.TargetItem
 import game.models.MAX_INVENTORY_SIZE
 import game.models.MAX_PLAYERS_COUNT
 import game.models.MIN_PLAYERS_COUNT
@@ -232,9 +233,9 @@ fun Health(health: Int, maxHealth: Int = PLAYER_HEALTH) {
 
 @Composable
 fun InventoryGrid(
-    inventory: List<Item>,
+    inventory: List<Any>,
     enabled: Boolean,
-    clickOnItem: (Item) -> Unit
+    clickOnItem: (Any) -> Unit
 ) {
     val allItemsState = rememberUpdatedState(inventory)
     val rows = MAX_INVENTORY_SIZE / 4
@@ -246,8 +247,16 @@ fun InventoryGrid(
                     val itemIdx = rowIndex * 4 + colIndex
                     val item = allItemsState.value.getOrNull(itemIdx)
                     val isInteractive = item != null && enabled
-                    val itemColor = item?.let { GameTheme.getItemColor(it) } ?: GameTheme.terminalGreen
-                    val itemIcon = item?.let { GameTheme.getItemIcon(it) } ?: ""
+
+                    val itemName = when (item) {
+                        is Item -> item.name
+                        is TargetItem -> item.name
+                        else -> ""
+                    }
+
+                    val castedItem = item as? Item
+                    val itemColor = castedItem?.let { GameTheme.getItemColor(it) } ?: GameTheme.terminalGreen
+                    val itemIcon = castedItem?.let { GameTheme.getItemIcon(it) } ?: ""
 
                     Box(
                         modifier = Modifier
@@ -268,7 +277,7 @@ fun InventoryGrid(
                                     modifier = Modifier.padding(bottom = 2.dp)
                                 )
                                 Text(
-                                    text = item.name.take(3).uppercase(),
+                                    text = itemName.take(3).uppercase(),
                                     color = if (enabled) itemColor else GameTheme.terminalDim,
                                     fontFamily = GameTheme.terminalFont,
                                     fontSize = 10.sp,
@@ -289,7 +298,7 @@ fun InventoryGrid(
 fun PlayerCard(
     player: PlayerUiState,
     isLarge: Boolean,
-    clickOnItem: (Item) -> Unit,
+    viewModel: ViewModel,
     modifier: Modifier = Modifier
 ) {
     val scale by animateFloatAsState(if (isLarge) 1.05f else 0.9f)
@@ -320,7 +329,12 @@ fun PlayerCard(
             InventoryGrid(
                 inventory = player.inventory,
                 enabled = isLarge,
-                clickOnItem = clickOnItem
+                clickOnItem = { item ->
+                    when (item) {
+                        is Item -> viewModel.useItem(player, item)
+                        is TargetItem -> viewModel.useItem(player, item)
+                    }
+                }
             )
         } else {
             Text(
@@ -335,7 +349,9 @@ fun PlayerCard(
         if (player.isCuffed) {
             Spacer(Modifier.height(12.dp))
             Box(
-                modifier = Modifier.border(1.dp, GameTheme.orangeWarning).background(Color(0xFF261200))
+                modifier = Modifier
+                    .border(1.dp, GameTheme.orangeWarning)
+                    .background(Color(0xFF261200))
                     .padding(horizontal = 8.dp, vertical = 2.dp)
             ) {
                 Text(
@@ -914,15 +930,15 @@ fun TableScreen(
             PlayerCard(
                 player = player,
                 isLarge = isSelected,
-                clickOnItem = { item -> viewModel.useItem(player, item) },
+                viewModel = viewModel,
                 modifier = Modifier
                     .align(alignment)
-                    .padding(12.dp)
+                    .padding(all = 12.dp)
                     .clickable {
                         if (isMatchEnded) {
                             selectedPlayerForStats = player.name
                         } else {
-                            viewModel.handlePlayerClick(player)
+                            viewModel.handlePlayerClick(clickedPlayerUi = player)
                         }
                     }
             )
@@ -1069,7 +1085,7 @@ fun MainAppContainer() {
                     playerNames.map { Player(name = it, initialHealth = PLAYER_HEALTH) }
                 }
                 val session = remember(rematchTrigger) { GameSession(currentPlayers) }
-                val viewModel = remember(rematchTrigger) { ViewModel(session, currentPlayers) }
+                val viewModel = remember(rematchTrigger) { ViewModel(session) }
 
                 LaunchedEffect(rematchTrigger) {
                     session.onEvent = null

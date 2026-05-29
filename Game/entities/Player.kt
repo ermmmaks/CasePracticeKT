@@ -15,10 +15,9 @@ class Player
     var isCuffed: Boolean = false
     var isBuffed: Boolean = false
 
-    val inventory = mutableListOf<Item>()
+    val inventory = mutableListOf<Any>()
 
-    fun takeDamage(dmg: Int)
-    {
+    fun takeDamage(dmg: Int) {
         health = (health - dmg).coerceAtLeast(0)
     }
 
@@ -27,13 +26,16 @@ class Player
         health = if (nextHealth > PLAYER_HEALTH) PLAYER_HEALTH else nextHealth
     }
 
-    fun addItem(item: Item): Boolean
-    {
+    fun addItem(item: Any): Boolean {
         if (inventory.size >= MAX_INVENTORY_SIZE) {
             return false
         }
 
         inventory.add(item)
         return true
+    }
+
+    fun removeItem(item: Any): Boolean {
+        return inventory.remove(item)
     }
 }

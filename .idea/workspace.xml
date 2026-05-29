@@ -5,31 +5,17 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/Game/engine/GameContext.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Game/entities/GameItems.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Game/entities/Item.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Game/entities/Player.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Game/entities/Shotgun.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Game/models/AmmoType.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/Game/models/Statistics.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/AppLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/AppLauncher.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/DataBase.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/data/DataBase.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameConfig.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/models/GameConfig.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEngine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameSession.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEntities.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameLauncher.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/MainUI.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/Models.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/models/GameEvent.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/ViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/description.md" beforeDir="false" afterPath="$PROJECT_DIR$/description.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/diagram.puml" beforeDir="false" afterPath="$PROJECT_DIR$/diagram.puml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/index.html" beforeDir="false" afterPath="$PROJECT_DIR$/index.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/DBSpecification.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/DBSpecification.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/GameSessionTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/GameSessionTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/engine/GameContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameContext.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/engine/GameSession.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameSession.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/entities/GameItems.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/GameItems.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/entities/Item.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/Items.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/entities/Player.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/Player.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/models/AmmoType.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/models/Enums.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/ui/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/MainUI.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/ui/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/ViewModel.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/test/ItemsTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/ItemsTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/PlayersTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/PlayersTest.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/ShotgunTests.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/ShotgunTests.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -63,6 +49,8 @@
       <list>
         <option value="Kotlin File" />
         <option value="Kotlin Class" />
+        <option value="Interface" />
+        <option value="Kotlin Interface" />
       </list>
     </option>
   </component>
@@ -71,6 +59,9 @@
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/test/GameSessionTest.kt" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -84,31 +75,32 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;Gradle.Build CasePracticeKT.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.CasePracticeKT [:AppLauncher.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.CasePracticeKT [:GameLauncher.main()].executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.GameItemsTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.GameSessionTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.PlayerTest.executor&quot;: &quot;Run&quot;,
-    &quot;Gradle.ShotgunTest.executor&quot;: &quot;Run&quot;,
-    &quot;JUnit.GameLogicTest.executor&quot;: &quot;Run&quot;,
-    &quot;ModuleVcsDetector.initialDetectionPerformed&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.git.unshallow&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;git-widget-placeholder&quot;: &quot;hw4&quot;,
-    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
-    &quot;last_opened_file_path&quot;: &quot;/home/maks/CasePracticeKT&quot;,
-    &quot;onboarding.tips.debug.path&quot;: &quot;/home/maks/CasePracticeKT/test/src/Main.java&quot;,
-    &quot;project.structure.last.edited&quot;: &quot;Project&quot;,
-    &quot;project.structure.proportion&quot;: &quot;0.0&quot;,
-    &quot;project.structure.side.proportion&quot;: &quot;0.0&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "Gradle.Build CasePracticeKT.executor": "Run",
+    "Gradle.CasePracticeKT [:AppLauncher.main()].executor": "Run",
+    "Gradle.CasePracticeKT [:GameLauncher.main()].executor": "Run",
+    "Gradle.CasePracticeKT [:game.AppLauncher.main()].executor": "Run",
+    "Gradle.GameItemsTest.executor": "Run",
+    "Gradle.GameSessionTest.executor": "Run",
+    "Gradle.PlayerTest.executor": "Run",
+    "Gradle.ShotgunTest.executor": "Run",
+    "JUnit.GameLogicTest.executor": "Run",
+    "ModuleVcsDetector.initialDetectionPerformed": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "git-widget-placeholder": "hw4",
+    "kotlin-language-version-configured": "true",
+    "last_opened_file_path": "/home/maks/CasePracticeKT",
+    "onboarding.tips.debug.path": "/home/maks/CasePracticeKT/test/src/Main.java",
+    "project.structure.last.edited": "Project",
+    "project.structure.proportion": "0.0",
+    "project.structure.side.proportion": "0.0",
+    "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />

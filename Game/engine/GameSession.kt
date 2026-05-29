@@ -3,16 +3,14 @@ package game.engine
 import game.models.*
 import game.entities.*
 
-class GameSession
-    (
-    private val players: List<Player>,
+class GameSession(
+    val players: List<Player>,
 ) : GameContext {
+    override val shotgun = Shotgun()
+    override var damageMultiplier: Int = 1
+    override var onEvent: ((GameEvent) -> Unit)? = null
 
-    private val shotgun = Shotgun()
     private var currentPlayerIdx: Int = 0
-    private var damageMultiplier: Int = 1
-
-    var onEvent: ((GameEvent) -> Unit)? = null
 
     var status: SessionStatus = SessionStatus.LOADING
         private set
@@ -25,7 +23,7 @@ class GameSession
 
         shotgun.load(finalLive, finalBlank)
 
-        val allPossibleItems = listOf(
+        val allPossibleItems: List<Any> = listOf(
             GameItems.Handsaw, GameItems.Magnifier, GameItems.Beer,
             GameItems.Phone, GameItems.Inverter, GameItems.Handcuffs,
             GameItems.Cigarette,
@@ -99,6 +97,43 @@ class GameSession
         }
     }
 
+    fun useItem(player: Player, item: Item) {
+        if (!validateUser(player)) return
+
+        if (player.removeItem(item)) {
+            item.applyEffect(this, player)
+            onEvent?.invoke(GameEvent.ItemUsed(player.name, item.name))
+            checkPostItemCondition()
+        }
+    }
+
+    fun useItem(player: Player, item: TargetItem, target: Player) {
+        if (!validateUser(player)) return
+
+        if (player.removeItem(item)) {
+            item.applyEffect(this, player, target)
+            onEvent?.invoke(GameEvent.ItemUsed(player.name, item.name))
+            checkPostItemCondition()
+        }
+    }
+
+    private fun validateUser(player: Player): Boolean {
+        if (player != players[currentPlayerIdx]) return false
+        if (player.health <= 0) {
+            onEvent?.invoke(GameEvent.InfoMessage("Dead men tell no tales... and use no items"))
+            return false
+        }
+        return true
+    }
+
+    private fun checkPostItemCondition() {
+        if (checkGameCondition()) return
+        if (shotgun.isEmpty()) {
+            onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
+            onEvent?.invoke(GameEvent.RoundEnded)
+        }
+    }
+
     private fun nextTurn() {
         var nextIdx = (currentPlayerIdx + 1) % players.size
 
@@ -130,75 +165,5 @@ class GameSession
             return true
         }
         return false
-    }
-
-    override fun peekNextAmmo(): AmmoType? {
-        return shotgun.peek()
-    }
-
-    override fun ejectAmmo(): AmmoType {
-        if (shotgun.isEmpty()) return AmmoType.BLANK
-
-        val ammo = shotgun.fire()
-        onEvent?.invoke(GameEvent.ActionLog("$ammo was ejected"))
-
-        if (checkGameCondition()) return ammo
-
-        if (shotgun.isEmpty()) {
-            onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
-            onEvent?.invoke(GameEvent.RoundEnded)
-        }
-
-        return ammo
-    }
-
-    override fun healActivePlayer() {
-        players[currentPlayerIdx].heal()
-    }
-
-    override fun upNextDamage() {
-        damageMultiplier = DAMAGE_MULTIPLIER
-    }
-
-    override fun skipOpponent(target: Player) {
-        val currentPlayer = players[currentPlayerIdx]
-        if (target == currentPlayer) {
-            sendInfo("Are u stpd?")
-            return
-        }
-        target.isCuffed = true
-        onEvent?.invoke(GameEvent.ActionLog("${target.name} was cuffed"))
-    }
-
-    override fun getPhoneCall() {
-        val idx = shotgun.findFirstLive()
-        if (idx == -1) {
-            sendInfo("No live left")
-        } else {
-            val position = idx + 1
-            sendInfo("$position is live")
-        }
-    }
-
-    override fun invertCurrentAmmo() {
-        shotgun.invertCurrentAmmo()
-        onEvent?.invoke(GameEvent.ActionLog("Reverse!"))
-    }
-
-    override fun sendInfo(message: String) {
-        onEvent?.invoke(GameEvent.InfoMessage(message))
-    }
-
-    fun useItem(player: Player, item: Item, target: Player? = null) {
-        if (player != players[currentPlayerIdx]) return
-        if (player.health <= 0) {
-            sendInfo("Dead men tell no tales... and use no items")
-            return
-        }
-
-        if (player.inventory.remove(item)) {
-            item.applyEffect(this, player, target)
-            onEvent?.invoke(GameEvent.ItemUsed(player.name, item.name))
-        }
     }
 }

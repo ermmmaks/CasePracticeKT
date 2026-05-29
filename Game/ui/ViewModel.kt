@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import game.models.GameEvent
 import game.engine.GameSession
 import game.entities.Item
+import game.entities.TargetItem
 import game.entities.Player
 
 data class PlayerUiState(
@@ -11,7 +12,7 @@ data class PlayerUiState(
     val health: Int,
     val isCuffed: Boolean,
     val isBuffed: Boolean,
-    val inventory: List<Item>,
+    val inventory: List<Any>, // Тип изменен на Any, так как внутри лежат разные интерфейсы предметов
     val isAlive: Boolean
 )
 
@@ -23,15 +24,14 @@ data class UiState(
     val isShotgunSawedOff: Boolean = false,
     val infoMessage: String = "",
     val pendingItemUser: PlayerUiState? = null,
-    val pendingItem: Item? = null
+    val pendingItem: TargetItem? = null // Строго храним предмет, ожидающий цель
 )
 
 class ViewModel(
-    private val session: GameSession,
-    private val playersFromSession: List<Player>
+    private val session: GameSession
 ) {
     var uiState by mutableStateOf(UiState(
-        players = playersFromSession.map { it.toUiState() }
+        players = session.players.map { it.toUiState() }
     ))
         private set
 
@@ -46,8 +46,11 @@ class ViewModel(
                 uiState = uiState.copy(activePlayerIdx = newIdx, isShotgunSawedOff = false, infoMessage = "")
                 refreshPlayers()
             }
-            is GameEvent.ShotFired, is GameEvent.ItemUsed -> {
-                if (event is GameEvent.ItemUsed && event.itemName == "Handsaw") {
+            is GameEvent.ShotFired -> {
+                refreshPlayers()
+            }
+            is GameEvent.ItemUsed -> {
+                if (event.itemName == "Handsaw") {
                     uiState = uiState.copy(isShotgunSawedOff = true)
                 }
                 refreshPlayers()
@@ -58,21 +61,19 @@ class ViewModel(
             is GameEvent.InfoMessage -> {
                 uiState = uiState.copy(infoMessage = event.text)
             }
-
             is GameEvent.RoundEnded -> {
-               uiState = uiState.copy(isShotgunSawedOff = false)
+                uiState = uiState.copy(isShotgunSawedOff = false)
                 refreshPlayers()
             }
-
             is GameEvent.GameOver -> {
                 refreshPlayers()
             }
         }
     }
 
-    private fun refreshPlayers()  {
-        uiState = uiState.copy (
-            players = playersFromSession.map { it.toUiState() }
+    private fun refreshPlayers() {
+        uiState = uiState.copy(
+            players = session.players.map { it.toUiState() }
         )
     }
 
@@ -85,45 +86,59 @@ class ViewModel(
         isAlive = this.health > 0
     )
 
-    fun useItem(playerUi: PlayerUiState, item: Item)  {
+    private fun canUseItem(playerUi: PlayerUiState): Boolean {
         val clickedPlayerIdx = uiState.players.indexOfFirst { it.name == playerUi.name }
-
         if (clickedPlayerIdx != uiState.activePlayerIdx || !playerUi.isAlive) {
             uiState = uiState.copy(infoMessage = "It's not yours, hands off!")
-            return
+            return false
         }
+        return true
+    }
 
-        if (item.name == "Handcuffs") {
-            uiState = uiState.copy(
-                pendingItemUser = playerUi,
-                pendingItem = item,
-                infoMessage = "SELECT TARGET FOR HANDCUFFS"
-            )
-            return
-        }
+    // ПЕРЕГРУЗКА 1: Для обычных предметов без цели
+    fun useItem(playerUi: PlayerUiState, item: Item) {
+        if (!canUseItem(playerUi)) return
 
-        val realPlayer = playersFromSession.find { it.name == playerUi.name }
+        val realPlayer = session.players.find { it.name == playerUi.name }
         if (realPlayer != null) {
             session.useItem(realPlayer, item)
             refreshPlayers()
         }
     }
 
-    private fun fireShot(targetUi: PlayerUiState)  {
-        val realTarget = playersFromSession.find { it.name == targetUi.name }
+    // ПЕРЕГРУЗКА 2: Для предметов, требующих выбора цели (например, Наручники)
+    fun useItem(playerUi: PlayerUiState, item: TargetItem) {
+        if (!canUseItem(playerUi)) return
+
+        uiState = uiState.copy(
+            pendingItemUser = playerUi,
+            pendingItem = item,
+            infoMessage = "SELECT TARGET FOR ${item.name.uppercase()}"
+        )
+    }
+
+    private fun fireShot(targetUi: PlayerUiState) {
+        val realTarget = session.players.find { it.name == targetUi.name }
         if (realTarget != null) {
             session.shot(realTarget)
         }
     }
 
-    fun handlePlayerClick(clickedPlayerUi: PlayerUiState)  {
+    fun handlePlayerClick(clickedPlayerUi: PlayerUiState) {
         val clickedIdx = uiState.players.indexOfFirst { it.name == clickedPlayerUi.name }
 
-        if (uiState.pendingItem != null && uiState.pendingItemUser != null) {
-            val realUser = playersFromSession.find { it.name == uiState.pendingItemUser!!.name }
-            val realTarget = playersFromSession.find { it.name == clickedPlayerUi.name }
+        // Если в режиме ожидания находится таргетированный предмет
+        val pendingItem = uiState.pendingItem
+        if (pendingItem != null && uiState.pendingItemUser != null) {
+            val realUser = session.players.find { it.name == uiState.pendingItemUser!!.name }
+            val realTarget = session.players.find { it.name == clickedPlayerUi.name }
+
             if (realUser != null && realTarget != null) {
-                session.useItem(realUser, uiState.pendingItem!!, realTarget)
+                if (realUser == realTarget) {
+                    uiState = uiState.copy(infoMessage = "You cannot target yourself!")
+                    return
+                }
+                session.useItem(realUser, pendingItem, realTarget)
                 uiState = uiState.copy(
                     pendingItem = null,
                     pendingItemUser = null,

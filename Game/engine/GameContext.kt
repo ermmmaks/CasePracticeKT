@@ -1,16 +1,10 @@
 package game.engine
 
-import game.entities.Player
-import game.models.AmmoType
+import game.entities.Shotgun
+import game.models.GameEvent
 
-interface GameContext
-{
-    fun peekNextAmmo(): AmmoType?
-    fun ejectAmmo(): AmmoType
-    fun healActivePlayer()
-    fun upNextDamage()
-    fun skipOpponent(target: Player)
-    fun getPhoneCall()
-    fun invertCurrentAmmo()
-    fun sendInfo(message: String)
+interface GameContext {
+    val shotgun: Shotgun
+    var damageMultiplier: Int
+    val onEvent: ((GameEvent) -> Unit)?
 }

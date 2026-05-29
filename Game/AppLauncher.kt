@@ -2,6 +2,8 @@ package game
 
 import game.engine.GameSession
 import game.entities.Player
+import game.entities.Item
+import game.entities.TargetItem
 import game.models.AmmoType
 import game.models.GameEvent
 import game.models.MAX_PLAYERS_COUNT
@@ -53,20 +55,31 @@ class AppLauncher
             val currentPlayer = activePlayer ?: players[0]
 
             println("\n Your turn, ${currentPlayer.name}")
-            println("HP: ${currentPlayer.health} | Inventory: ${currentPlayer.inventory.map { it.name }}")
-            println("Commands: 's' -- self shot, 'o' -- shot enemy, 'i [number]' -- use item, 'q' -- quit")
+
+            // ИСПРАВЛЕНИЕ ОШИБКИ 56: Безопасно приводим Any к интерфейсам, чтобы прочитать .name
+            val inventoryNames = currentPlayer.inventory.map {
+                when (it) {
+                    is Item -> it.name
+                    is TargetItem -> it.name
+                    else -> "Unknown"
+                }
+            }
+            println("HP: ${currentPlayer.health} | Inventory: $inventoryNames")
+            println("Commands: 's' -- self shot, 'o' -- shot enemy, 'i' -- use item, 'q' -- quit")
 
             val input = scanner.next()
 
             when (input) {
                 "s" -> session.shot(currentPlayer)
                 "o" -> {
-                    println("Choose a target")
-                    val targetIdx = scanner.nextInt() - 1
-                    if (targetIdx in players.indices) {
-                        session.shot(players[targetIdx])
-                    } else {
-                        println("Wrong number!!!")
+                    println("Choose a target (1-${players.size}):")
+                    if (scanner.hasNextInt()) {
+                        val targetIdx = scanner.nextInt() - 1
+                        if (targetIdx in players.indices) {
+                            session.shot(players[targetIdx])
+                        } else {
+                            println("Wrong number!!!")
+                        }
                     }
                 }
                 "i" -> {
@@ -74,11 +87,30 @@ class AppLauncher
                         println("NO ITEMS? :(")
                     } else {
                         println("Peek item (0-${currentPlayer.inventory.size - 1}):")
-                        val itemIdx = scanner.nextInt()
-                        val item = currentPlayer.inventory.getOrNull(itemIdx)
-                        if (item != null) {
-                            val target = players.firstOrNull { it != currentPlayer && it.health > 0 }
-                            session.useItem(currentPlayer, item, target)
+                        if (scanner.hasNextInt()) {
+                            val itemIdx = scanner.nextInt()
+                            val item = currentPlayer.inventory.getOrNull(itemIdx)
+
+                            // ИСПРАВЛЕНИЕ ОШИБОК НА СТРОКЕ 81: Разделяем логику активации по типам
+                            if (item != null) {
+                                when (item) {
+                                    is TargetItem -> {
+                                        // Ищем первую подходящую живую цель для наручников
+                                        val target = players.firstOrNull { it != currentPlayer && it.health > 0 }
+                                        if (target != null) {
+                                            session.useItem(currentPlayer, item, target) // Вызов перегрузки TargetItem
+                                        } else {
+                                            println("No valid targets available!")
+                                        }
+                                    }
+                                    is Item -> {
+                                        session.useItem(currentPlayer, item) // Вызов перегрузки Item без цели
+                                    }
+                                    else -> println("Unknown item type!")
+                                }
+                            } else {
+                                println("Invalid item index!")
+                            }
                         }
                     }
                 }
