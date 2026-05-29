@@ -1084,11 +1084,13 @@ fun MainAppContainer() {
                 val currentPlayers = remember(rematchTrigger) {
                     playerNames.map { Player(name = it, initialHealth = PLAYER_HEALTH) }
                 }
+
+                // Просто создаем пустую сессию БЕЗ вызова startRound()
                 val session = remember(rematchTrigger) { GameSession(currentPlayers) }
                 val viewModel = remember(rematchTrigger) { ViewModel(session) }
 
                 LaunchedEffect(rematchTrigger) {
-                    session.onEvent = null
+                    // Сначала привязываем слушатель событий, чтобы интерфейс поймал ActionLog и TurnChanged
                     session.onEvent = { event ->
                         if (event is GameEvent.GameOver) {
                             val winner = currentPlayers.find { it.health > 0 }
@@ -1098,6 +1100,8 @@ fun MainAppContainer() {
                         }
                         viewModel.handleEvent(event)
                     }
+
+                    // Только ТЕПЕРЬ безопасно запускаем первый раунд один раз
                     session.startRound()
                 }
 

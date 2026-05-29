@@ -6,16 +6,8 @@
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/AppLauncher.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/AppLauncher.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/engine/GameContext.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameContext.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/engine/GameSession.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/engine/GameSession.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/entities/GameItems.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/GameItems.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/entities/Item.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/Items.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/entities/Player.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/entities/Player.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/models/AmmoType.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/models/Enums.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/Game/ui/MainUI.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/MainUI.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/ui/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/ViewModel.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/test/ItemsTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/test/ItemsTest.kt" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -81,6 +73,7 @@
     "Gradle.CasePracticeKT [:AppLauncher.main()].executor": "Run",
     "Gradle.CasePracticeKT [:GameLauncher.main()].executor": "Run",
     "Gradle.CasePracticeKT [:game.AppLauncher.main()].executor": "Run",
+    "Gradle.CasePracticeKT [:game.GameLauncher.main()].executor": "Run",
     "Gradle.GameItemsTest.executor": "Run",
     "Gradle.GameSessionTest.executor": "Run",
     "Gradle.PlayerTest.executor": "Run",

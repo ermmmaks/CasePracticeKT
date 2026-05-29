@@ -83,6 +83,7 @@ class GameSession(
         if (shotgun.isEmpty()) {
             onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
             onEvent?.invoke(GameEvent.RoundEnded)
+            startRound()
             return
         }
 
@@ -131,6 +132,7 @@ class GameSession(
         if (shotgun.isEmpty()) {
             onEvent?.invoke(GameEvent.ActionLog("Get ready for another round >:)"))
             onEvent?.invoke(GameEvent.RoundEnded)
+            startRound()
         }
     }
 
