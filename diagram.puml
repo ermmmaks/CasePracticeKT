@@ -4,22 +4,21 @@ skinparam classAttributeIconSize 0
 ' --- Interfaces and Abstractions ---
 
 interface GameContext {
-    + peekNextAmmo(): AmmoType?
-    + ejectAmmo(): AmmoType
-    + healActivePlayer()
-    + doubleNextDamage()
-    + skipOpponent(target: Player)
-    + getPhoneCall()
-    + invertCurrentAmmo()
-    + sendInfo(message: String)
+    + shotgun: Shotgun
+    + damageMultiplier: Int
 }
 
 interface Item {
     + name: String
-    + applyEffect(context: GameContext, user: Player, target: Player? = null)
+    + applyEffect(context: GameContext, user: Player): ItemEffectResult
 }
 
-' --- Presentation & Navigation Layer (ui & VM) ---
+interface TargetItem {
+    + name: String
+    + applyEffect(context: GameContext, user: Player, target: Player): ItemEffectResult
+}
+
+' --- Presentation & Navigation Layer (UI & Presenter) ---
 
 class GameLauncher {
     + main(args: Array<String>)
@@ -35,28 +34,42 @@ class MainAppContainer {
     + MainAppContainer()
 }
 
-class ViewModel {
+class Presenter {
     + uiState: UiState
-    + handleEvent(event: GameEvent)
+    + startGame()
+    + shoot(targetPlayerUi: PlayerUiState)
     + useItem(playerUi: PlayerUiState, item: Item)
-    + handlePlayerClick(clickedPlayerUi: PlayerUiState)
+    + useItem(playerUi: PlayerUiState, item: TargetItem)
+    + selectTarget(targetPlayerUi: PlayerUiState)
+    - applyTargetItem(targetPlayerUi: PlayerUiState)
+    - handleItemResult(result: UseItemResult, itemName: String)
+    - updateStateFromSession()
+    - addLog(message: String)
 }
 
 ' --- Domain Logic Layer (Core engine) ---
 
 class AppLauncher << (C,#FF7700) Console Entry >> {
     + main(args: Array<String>)
+    - handleShotResult(result: ShotResult)
+    - handleItemResult(result: UseItemResult)
+    - handleItemEffect(effect: ItemEffectResult)
 }
 
 class GameSession implements GameContext {
     - status: SessionStatus
-    - players: List<Player>
-    - shotgun: Shotgun
     - currentPlayerIdx: Int
-    + onEvent: ((GameEvent) -> Unit)?
+    + players: List<Player>
+    + shotgun: Shotgun
+    + damageMultiplier: Int
 
-    + shot(target: Player)
-    + useItem(player: Player, item: Item, target: Player? = null)
+    + startRound(live: Int?, blank: Int?): RoundStartResult
+    + shot(target: Player): ShotResult
+    + useItem(player: Player, item: Item): UseItemResult
+    + useItem(player: Player, item: TargetItem, target: Player): UseItemResult
+    + getCurrentPlayer(): Player?
+    + getWinner(): Player?
+    + getPlayersCopy(): List<Player>
 }
 
 class Shotgun {
@@ -74,14 +87,15 @@ class Player {
     - health: Int
     + isCuffed: Boolean
     + isBuffed: Boolean
-    + inventory: MutableList<Item>
+    + inventory: MutableList<Any>
 
-    + takeDamage(value: Int)
+    + takeDamage(dmg: Int)
     + heal()
-    + addItem(item: Item): Boolean
+    + addItem(item: Any): Boolean
+    + removeItem(item: Any): Boolean
 }
 
-' --- data Access Layer (Exposed ORM & SQLite) ---
+' --- Data Access Layer (Exposed ORM & SQLite) ---
 
 class StatisticsService {
     + getOrCreateStats(playerName: String): Statistics
@@ -137,7 +151,7 @@ enum SessionStatus {
 GameLauncher ..> MainAppContainer
 MainAppContainer "1" *-- "0..1" GameSession
 MainAppContainer "1" *-- "1" StatisticsService
-MainAppContainer ..> ViewModel
+MainAppContainer ..> Presenter
 
 AppLauncher "1" *-- "0..1" GameSession
 AppLauncher "1" *-- "1" StatisticsService
@@ -146,8 +160,13 @@ GameSession "1" *-- "1" Shotgun
 GameSession "1" *-- "1" SessionStatus
 
 Item ..> GameContext
+TargetItem ..> GameContext
 Player "1" *-- "1" Statistics
+
+' Связи инвентаря игрока со всеми типами предметов
 Player "1" o-- "0..8" Item
+Player "1" o-- "0..8" TargetItem
+
 Shotgun ..> AmmoType
 
 StatisticsService ..> PlayersTable
