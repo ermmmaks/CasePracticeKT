@@ -5,16 +5,10 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/test/GameSessionTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/ItemsTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/PlayersTest.kt" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test/ShotgunTests.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/modules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEngine.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEngine.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/GameEntities.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/GameEntities.kt" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/Game/tests.kt" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle.kts" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle.kts" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/Game/ui/ViewModel.kt" beforeDir="false" afterPath="$PROJECT_DIR$/Game/ui/Presenter.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/description.md" beforeDir="false" afterPath="$PROJECT_DIR$/description.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/diagram.puml" beforeDir="false" afterPath="$PROJECT_DIR$/diagram.puml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -43,11 +37,24 @@
       </state>
     </system>
   </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Kotlin File" />
+        <option value="Interface" />
+        <option value="Kotlin Interface" />
+        <option value="Kotlin Class" />
+      </list>
+    </option>
+  </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="HighlightingSettingsPerFile">
     <setting file="file://$PROJECT_DIR$/test/GameSessionTest.kt" root0="SKIP_INSPECTION" />
+  </component>
+  <component name="ProblemsViewState">
+    <option name="selectedTabId" value="CurrentFile" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;customColor&quot;: &quot;&quot;,
@@ -65,6 +72,9 @@
   "keyToString": {
     "Gradle.Build CasePracticeKT.executor": "Run",
     "Gradle.CasePracticeKT [:AppLauncher.main()].executor": "Run",
+    "Gradle.CasePracticeKT [:GameLauncher.main()].executor": "Run",
+    "Gradle.CasePracticeKT [:game.AppLauncher.main()].executor": "Run",
+    "Gradle.CasePracticeKT [:game.GameLauncher.main()].executor": "Run",
     "Gradle.GameItemsTest.executor": "Run",
     "Gradle.GameSessionTest.executor": "Run",
     "Gradle.PlayerTest.executor": "Run",
@@ -75,9 +85,9 @@
     "RunOnceActivity.TerminalTabsStorage.copyFrom.TerminalArrangementManager.252": "true",
     "RunOnceActivity.git.unshallow": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "main",
+    "git-widget-placeholder": "hw4",
     "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "/home/maks/CasePracticeKT/settings.gradle.kts",
+    "last_opened_file_path": "/home/maks/CasePracticeKT",
     "onboarding.tips.debug.path": "/home/maks/CasePracticeKT/test/src/Main.java",
     "project.structure.last.edited": "Project",
     "project.structure.proportion": "0.0",
@@ -85,6 +95,11 @@
     "settings.editor.selected.configurable": "reference.settingsdialog.project.gradle"
   }
 }]]></component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="d6fac70e-dd2c-47e0-9c40-304db4e40345" name="Changes" comment="" />
@@ -94,5 +109,16 @@
       <updated>1777998058202</updated>
     </task>
     <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
   </component>
 </project>

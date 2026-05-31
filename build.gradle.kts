@@ -15,12 +15,12 @@ repositories {
 sourceSets {
     main {
         kotlin {
-            setSrcDirs(listOf("./Game"))
+            srcDir("Game")
         }
     }
     test {
         kotlin {
-            srcDirs(listOf("./test"))
+            srcDir("test")
         }
     }
 }
@@ -29,14 +29,25 @@ dependencies {
     implementation(compose.desktop.currentOs)
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.8.0")
 
-    implementation("org.junit.jupiter:junit-jupiter:5.10.0")
-    implementation(kotlin("test"))
+    implementation("org.jetbrains.exposed:exposed-core:0.50.1")
+    implementation("org.jetbrains.exposed:exposed-dao:0.50.1")
+    implementation("org.jetbrains.exposed:exposed-jdbc:0.50.1")
+    implementation("org.xerial:sqlite-jdbc:3.45.2.0")
+
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.0")
+    testImplementation(kotlin("test"))
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+    }
+}
 
 compose.desktop {
     application {
-        mainClass = "AppLauncher"
+        mainClass = "game.GameLauncher"
+
         nativeDistributions {
             targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg)
         }

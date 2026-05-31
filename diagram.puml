@@ -1,92 +1,138 @@
 @startuml
 skinparam classAttributeIconSize 0
 
-' --- Интерфейсы и Абстракции (I) ---
+' --- Interfaces and Abstractions ---
 
 interface GameContext {
-    + peekNextAmmo(): AmmoType
-    + ejectAmmo(): AmmoType
-    + healActivePlayer()
-    + doubleNextDamage()
-    + skipOpponent(target: Player)
-    + getPhoneCall()
-    + invertCurrentAmmo()
-    + sendInfo(message: String)
+    + shotgun: Shotgun
+    + damageMultiplier: Int
 }
 
 interface Item {
     + name: String
-    + applyEffect(context: GameContext, user: Player, target: Player? = null)
+    + applyEffect(context: GameContext, user: Player): ItemEffectResult
 }
 
-' --- Основные классы (C) ---
+interface TargetItem {
+    + name: String
+    + applyEffect(context: GameContext, user: Player, target: Player): ItemEffectResult
+}
 
-class AppLauncher {
-    - currentSession: GameSession
+' --- Presentation & Navigation Layer (UI & Presenter) ---
+
+class GameLauncher {
     + main(args: Array<String>)
-    + startNewGame()
-    + handleGameEvent(event: GameEvent)
 }
 
-class GameSession implements GameContext{
-    - id: UUID
+class MainAppContainer {
+    - playerCount: Int
+    - playerNames: SnapshotStateList<String>
+    - loggedInPlayers: SnapshotStateList<Player>
+    - showLeaderboard: Boolean
+    - rematchTrigger: Int
+    - currentScreen: String
+    + MainAppContainer()
+}
+
+class Presenter {
+    + uiState: UiState
+    + startGame()
+    + shoot(targetPlayerUi: PlayerUiState)
+    + useItem(playerUi: PlayerUiState, item: Item)
+    + useItem(playerUi: PlayerUiState, item: TargetItem)
+    + selectTarget(targetPlayerUi: PlayerUiState)
+    - applyTargetItem(targetPlayerUi: PlayerUiState)
+    - handleItemResult(result: UseItemResult, itemName: String)
+    - updateStateFromSession()
+    - addLog(message: String)
+}
+
+' --- Domain Logic Layer (Core engine) ---
+
+class AppLauncher << (C,#FF7700) Console Entry >> {
+    + main(args: Array<String>)
+    - handleShotResult(result: ShotResult)
+    - handleItemResult(result: UseItemResult)
+    - handleItemEffect(effect: ItemEffectResult)
+}
+
+class GameSession implements GameContext {
     - status: SessionStatus
-    - players: List<Player>
-    - shotgun: Shotgun
     - currentPlayerIdx: Int
-    
-    + shot(target: Player)    
-    + nextTurn()
-    + checkGameCondition()
-    
-    + peekNextAmmo(): AmmoType
-    + ejectAmmo(): AmmoType
-    + healActivePlayer()
-    + doubleNextDamage()
-    + skipOpponent(target: Player)
-    + getPhoneCall()
-    + invertCurrentAmmo()
-    + sendInfo(message: String)
-    + useItem(player: Player, item: Item, target: Player? = null)
+    + players: List<Player>
+    + shotgun: Shotgun
+    + damageMultiplier: Int
+
+    + startRound(live: Int?, blank: Int?): RoundStartResult
+    + shot(target: Player): ShotResult
+    + useItem(player: Player, item: Item): UseItemResult
+    + useItem(player: Player, item: TargetItem, target: Player): UseItemResult
+    + getCurrentPlayer(): Player?
+    + getWinner(): Player?
+    + getPlayersCopy(): List<Player>
 }
 
 class Shotgun {
     - barrel: MutableList<AmmoType>
     + load(live: Int, blank: Int)
     + fire(): AmmoType
-    + peek(): AmmoType
-    + findFirstLive()
+    + peek(): AmmoType?
+    + findFirstLive(): Int
     + invertCurrentAmmo()
     + isEmpty(): Boolean
 }
 
 class Player {
-    - id: UUID
     + name: String
     - health: Int
-    - isCuffed: Boolean
-    - isBuffed: Boolean
-    - inventory: MutableList<Item>
-    
-    + takeDamage(value: Int)
-    + heal(value: Int)
-    + addItem(item: Item): Boolean
+    + isCuffed: Boolean
+    + isBuffed: Boolean
+    + inventory: MutableList<Any>
+
+    + takeDamage(dmg: Int)
+    + heal()
+    + addItem(item: Any): Boolean
+    + removeItem(item: Any): Boolean
+}
+
+' --- Data Access Layer (Exposed ORM & SQLite) ---
+
+class StatisticsService {
+    + getOrCreateStats(playerName: String): Statistics
+    + updateStats(winnerName: String, participants: List<String>)
+    + getLeaderboard(): List<Pair<String, Statistics>>
+    + getMatchHistory(): List<MatchLog>
+    + clearAllData()
+}
+
+entity PlayersTable << (O,#FF7700) object >> {
+    + name: Column<String> [PK]
+    + wins: Column<Int>
+    + totalGames: Column<Int>
+}
+
+entity MatchHistoryTable << (O,#FF7700) object >> {
+    + matchId: Column<UUID> [PK]
+    + winnerName: Column<String>
+    + timestamp: Column<Long>
 }
 
 class Statistics {
     + wins: Int
     + totalGames: Int
+    + formattedWinRate: String
     + calculateWinRate(): Double
 }
 
-class MatchHistory {
-    - matchId: UUID
-    + winnerId: UUID
-    + losersId: List<UUID>
-    + save()
+class MatchLog {
+    + matchId: UUID
+    + winnerName: String
+    + timestamp: Long
+    + gameNumber: Int
+    + participants: List<String>
 }
 
-' --- Перечисления (E) ---
+' --- Enumerations ---
 
 enum AmmoType {
     LIVE
@@ -95,23 +141,35 @@ enum AmmoType {
 
 enum SessionStatus {
     LOADING
-    DEALING
+    DISTRIBUTION
     PLAYER_TURN
     GAME_OVER
 }
 
-' --- Отношения и зависимости ---
+' --- Relationships and Dependencies ---
+
+GameLauncher ..> MainAppContainer
+MainAppContainer "1" *-- "0..1" GameSession
+MainAppContainer "1" *-- "1" StatisticsService
+MainAppContainer ..> Presenter
 
 AppLauncher "1" *-- "0..1" GameSession
+AppLauncher "1" *-- "1" StatisticsService
 GameSession "1" *-- "2..4" Player
 GameSession "1" *-- "1" Shotgun
 GameSession "1" *-- "1" SessionStatus
 
 Item ..> GameContext
+TargetItem ..> GameContext
 Player "1" *-- "1" Statistics
+
+' Связи инвентаря игрока со всеми типами предметов
 Player "1" o-- "0..8" Item
+Player "1" o-- "0..8" TargetItem
 
 Shotgun ..> AmmoType
-AppLauncher ..> MatchHistory
 
+StatisticsService ..> PlayersTable
+StatisticsService ..> MatchHistoryTable
+StatisticsService ..> MatchLog
 @enduml
